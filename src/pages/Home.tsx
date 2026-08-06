@@ -21,12 +21,11 @@ function Home() {
   }
 
   const filteredBusinesses = businesses.filter((business) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      business.name.toLowerCase().includes(search.toLowerCase()) ||
-      business.description.toLowerCase().includes(search.toLowerCase()) ||
-      business.tags.some((tag) =>
-        tag.toLowerCase().includes(search.toLowerCase())
-      );
+      business.name.toLowerCase().includes(q) ||
+      business.description.toLowerCase().includes(q) ||
+      business.tags.some((tag) => tag.toLowerCase().includes(q));
     const matchesCategory =
       selectedCategory === "All" || business.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -101,6 +100,7 @@ function Home() {
               {filteredBusinesses.map((business) => (
                 <BusinessCard
                   key={business.id}
+                  id={business.id}
                   name={business.name}
                   description={business.description}
                   rating={business.rating}
