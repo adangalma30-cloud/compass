@@ -1,15 +1,38 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import BusinessDetail from "./pages/BusinessDetail";
+import SplashScreen from "./components/SplashScreen";
+
+// Show splash once per browser session.
+const SESSION_KEY = "compass-splash-seen";
+const hasSeenSplash = sessionStorage.getItem(SESSION_KEY) === "true";
 
 function App() {
+  // If the user has already seen the splash this session, skip straight to app.
+  const [splashDone, setSplashDone] = useState(hasSeenSplash);
+
+  function handleSplashComplete() {
+    sessionStorage.setItem(SESSION_KEY, "true");
+    setSplashDone(true);
+  }
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/business/:id" element={<BusinessDetail />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      {/* Splash renders as a fixed overlay (z-9999); app renders behind it. */}
+      {!splashDone && <SplashScreen onComplete={handleSplashComplete} />}
+
+      {/*
+       * Always mount the router so the correct URL is parsed immediately.
+       * Page entry animations are gated on `splashDone` via the `pageReady` prop.
+       */}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home pageReady={splashDone} />} />
+          <Route path="/business/:id" element={<BusinessDetail />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

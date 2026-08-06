@@ -1,6 +1,18 @@
-function Navbar() {
+import { motion } from "framer-motion";
+
+type NavbarProps = {
+  /** When true the navbar slides down into view. Default true. */
+  animate?: boolean;
+};
+
+function Navbar({ animate = true }: NavbarProps) {
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <motion.nav
+      className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100"
+      initial={animate ? { y: -64, opacity: 0 } : false}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
@@ -33,7 +45,7 @@ function Navbar() {
           </button>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
 
