@@ -1,7 +1,9 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import BusinessCard from "../components/BusinessCard";
 import businesses from "../data/businesses";
+import { useFavorites } from "../hooks/useFavorites";
 
 function NotFound() {
   return (
@@ -51,9 +53,36 @@ function StarRow({ rating, reviews }: { rating: number; reviews: number }) {
 export default function BusinessDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [shareCopied, setShareCopied] = useState(false);
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   const business = businesses.find((b) => b.id === Number(id));
+  useEffect(() => {
+    if (!business) return;
+    document.title = `${business.name} — Compass`;
+    return () => {
+      document.title = "Compass — Find Local Businesses";
+    };
+  }, [business]);
+
   if (!business) return <NotFound />;
+
+  async function handleShare() {
+    if (!business) return;
+    const shareBusiness = business;
+    const shareData = {
+      title: `${shareBusiness.name} on Compass`,
+      text: shareBusiness.description,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      await navigator.share(shareData);
+      return;
+    }
+    await navigator.clipboard.writeText(window.location.href);
+    setShareCopied(true);
+    window.setTimeout(() => setShareCopied(false), 2200);
+  }
 
   const related = businesses.filter(
     (b) => b.category === business.category && b.id !== business.id
@@ -107,6 +136,26 @@ export default function BusinessDetail() {
                   </span>
                 ))}
               </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => toggleFavorite(business.id)}
+                className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+                  isFavorite(business.id)
+                    ? "border-indigo-600 bg-indigo-600 text-white"
+                    : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:text-indigo-600"
+                }`}
+              >
+                {isFavorite(business.id) ? "Saved" : "Save place"}
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+              >
+                {shareCopied ? "Link copied" : "Share"}
+              </button>
             </div>
           </div>
         </div>
@@ -247,6 +296,8 @@ export default function BusinessDetail() {
                   category={b.category}
                   tags={b.tags}
                   icon={b.icon}
+                  isFavorite={isFavorite(b.id)}
+                  onToggleFavorite={toggleFavorite}
                 />
               ))}
             </div>

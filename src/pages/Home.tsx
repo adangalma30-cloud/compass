@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import Navbar from "../components/Navbar";
@@ -8,6 +8,7 @@ import FeaturedBusinesses from "../components/FeaturedBusinesses";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
 import BusinessCard from "../components/BusinessCard";
+import { useFavorites } from "../hooks/useFavorites";
 
 import businesses from "../data/businesses";
 
@@ -44,6 +45,10 @@ type HomeProps = {
 function Home({ pageReady = true }: HomeProps) {
   const [search, setSearch]                     = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCity, setSelectedCity]         = useState("All cities");
+  const [sortBy, setSortBy]                     = useState("recommended");
+  const [showSaved, setShowSaved]               = useState(false);
+  const { favoriteIds, toggleFavorite, isFavorite } = useFavorites();
 
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -51,23 +56,60 @@ function Home({ pageReady = true }: HomeProps) {
     resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const filteredBusinesses = businesses.filter((business) => {
-    const q = search.toLowerCase();
-    const matchesSearch =
-      business.name.toLowerCase().includes(q) ||
-      business.description.toLowerCase().includes(q) ||
-      business.tags.some((t) => t.toLowerCase().includes(q));
-    const matchesCategory =
-      selectedCategory === "All" || business.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const cities = useMemo(
+    () => [
+      "All cities",
+      ...Array.from(new Set(businesses.map((business) => business.city))),
+    ],
+    [],
+  );
 
-  const isFiltering = search.trim().length > 0 || selectedCategory !== "All";
+  const filteredBusinesses = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const results = businesses.filter((business) => {
+      const matchesSearch =
+        business.name.toLowerCase().includes(q) ||
+        business.description.toLowerCase().includes(q) ||
+        business.city.toLowerCase().includes(q) ||
+        business.tags.some((t) => t.toLowerCase().includes(q));
+      const matchesCategory =
+        selectedCategory === "All" || business.category === selectedCategory;
+      const matchesCity =
+        selectedCity === "All cities" || business.city === selectedCity;
+      const matchesSaved = !showSaved || favoriteIds.includes(business.id);
+      return matchesSearch && matchesCategory && matchesCity && matchesSaved;
+    });
+
+    return [...results].sort((a, b) => {
+      if (sortBy === "rating") return b.rating - a.rating || b.reviews - a.reviews;
+      if (sortBy === "reviews") return b.reviews - a.reviews;
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return Number(b.featured) - Number(a.featured) || b.rating - a.rating;
+    });
+  }, [favoriteIds, search, selectedCategory, selectedCity, showSaved, sortBy]);
+
+  const isFiltering =
+    search.trim().length > 0 ||
+    selectedCategory !== "All" ||
+    selectedCity !== "All cities" ||
+    showSaved;
+
+  function showSavedPlaces() {
+    setShowSaved(true);
+    setSelectedCategory("All");
+    setSelectedCity("All cities");
+    setSearch("");
+    window.setTimeout(scrollToResults, 0);
+  }
 
   return (
     <div className="min-h-screen">
       {/* Navbar slides down from above */}
-      <Navbar animate={pageReady} />
+      <Navbar
+        animate={pageReady}
+        savedCount={favoriteIds.length}
+        onSavedClick={showSavedPlaces}
+      />
 
       {/* Hero fades up */}
       <motion.div {...fadeUp(0.15)} animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}>
@@ -89,11 +131,15 @@ function Home({ pageReady = true }: HomeProps) {
 
       {/* Featured businesses */}
       <motion.div {...fadeUp(0.3)} animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}>
-        <FeaturedBusinesses businesses={businesses} />
+        <FeaturedBusinesses
+          businesses={businesses}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
+        />
       </motion.div>
 
       {/* Browse / results section */}
-      <section ref={resultsRef} className="max-w-6xl mx-auto px-6 py-16">
+      <section id="discover" ref={resultsRef} className="max-w-6xl mx-auto px-6 py-16">
         <motion.div
           {...fadeUp(0.35)}
           animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -118,6 +164,48 @@ function Home({ pageReady = true }: HomeProps) {
             setSearch={setSearch}
             resultCount={filteredBusinesses.length}
           />
+
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
+            <label className="flex-1">
+              <span className="sr-only">City</span>
+              <select
+                value={selectedCity}
+                onChange={(event) => {
+                  setSelectedCity(event.target.value);
+                  setShowSaved(false);
+                }}
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              >
+                {cities.map((city) => <option key={city}>{city}</option>)}
+              </select>
+            </label>
+            <label className="flex-1">
+              <span className="sr-only">Sort results</span>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value)}
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <option value="recommended">Sort: Recommended</option>
+                <option value="rating">Sort: Highest rated</option>
+                <option value="reviews">Sort: Most reviewed</option>
+                <option value="name">Sort: Name</option>
+              </select>
+            </label>
+            {favoriteIds.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowSaved((current) => !current)}
+                className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
+                  showSaved
+                    ? "border-indigo-600 bg-indigo-600 text-white"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600"
+                }`}
+              >
+                {showSaved ? "Showing saved" : "Saved places"}
+              </button>
+            )}
+          </div>
 
           <CategoryFilter
             selected={selectedCategory}
@@ -144,6 +232,8 @@ function Home({ pageReady = true }: HomeProps) {
                 onClick={() => {
                   setSearch("");
                   setSelectedCategory("All");
+                  setSelectedCity("All cities");
+                  setShowSaved(false);
                 }}
                 className="mt-6 text-sm font-medium text-indigo-600 hover:text-indigo-700 underline-offset-2 hover:underline transition-all"
               >
@@ -169,6 +259,8 @@ function Home({ pageReady = true }: HomeProps) {
                     category={business.category}
                     tags={business.tags}
                     icon={business.icon}
+                    isFavorite={isFavorite(business.id)}
+                    onToggleFavorite={toggleFavorite}
                   />
                 </motion.div>
               ))}
@@ -184,7 +276,7 @@ function Home({ pageReady = true }: HomeProps) {
             <span>🧭</span>
             <span>Compass</span>
           </div>
-          <p>AI Recommends. People Decide.</p>
+          <p id="about">AI Recommends. People Decide.</p>
           <p>© {new Date().getFullYear()} Compass. All rights reserved.</p>
         </div>
       </footer>

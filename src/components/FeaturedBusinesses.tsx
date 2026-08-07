@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import type { Business } from "../types/business";
 
-type FeaturedCardProps = Business;
+type FeaturedCardProps = Business & {
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: number) => void;
+};
 
 function FeaturedCard({
   id,
@@ -13,10 +16,12 @@ function FeaturedCard({
   category,
   tags,
   icon,
+  isFavorite,
+  onToggleFavorite,
 }: FeaturedCardProps) {
   return (
-    <Link to={`/business/${id}`} className="block group">
-      <article className="flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden group-hover:border-indigo-100 group-hover:shadow-xl group-hover:shadow-indigo-50/80 transition-all duration-200 cursor-pointer h-full">
+    <article className="relative flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden group-hover:border-indigo-100 group-hover:shadow-xl group-hover:shadow-indigo-50/80 transition-all duration-200 h-full">
+      <Link to={`/business/${id}`} className="block h-full">
         {/* Image area */}
         <div className="relative h-36 bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center">
           <span className="text-5xl">{icon}</span>
@@ -28,7 +33,7 @@ function FeaturedCard({
         {/* Body */}
         <div className="flex flex-col flex-1 p-5">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 text-base leading-tight group-hover:text-indigo-700 transition-colors">
+            <h3 className="font-semibold text-gray-900 text-base leading-tight group-hover:text-indigo-700 transition-colors pr-8">
               {name}
             </h3>
             <div className="flex items-center gap-1 flex-shrink-0">
@@ -56,16 +61,37 @@ function FeaturedCard({
             ))}
           </div>
         </div>
-      </article>
-    </Link>
+      </Link>
+      {onToggleFavorite && (
+        <button
+          type="button"
+          aria-label={isFavorite ? `Remove ${name} from saved places` : `Save ${name}`}
+          aria-pressed={isFavorite}
+          onClick={() => onToggleFavorite(id)}
+          className={`absolute right-3 top-3 z-10 h-8 w-8 rounded-full border text-lg transition-all ${
+            isFavorite
+              ? "border-indigo-100 bg-indigo-50 text-indigo-600"
+              : "border-white/80 bg-white text-gray-300 hover:border-indigo-100 hover:text-indigo-500"
+          }`}
+        >
+          {isFavorite ? "♥" : "♡"}
+        </button>
+      )}
+    </article>
   );
 }
 
 type FeaturedBusinessesProps = {
   businesses: Business[];
+  favoriteIds?: number[];
+  onToggleFavorite?: (id: number) => void;
 };
 
-function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
+function FeaturedBusinesses({
+  businesses,
+  favoriteIds = [],
+  onToggleFavorite,
+}: FeaturedBusinessesProps) {
   const featured = businesses.filter((b) => b.featured);
   if (featured.length === 0) return null;
 
@@ -89,7 +115,12 @@ function FeaturedBusinesses({ businesses }: FeaturedBusinessesProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {featured.map((business) => (
-            <FeaturedCard key={business.id} {...business} />
+            <FeaturedCard
+              key={business.id}
+              {...business}
+              isFavorite={favoriteIds.includes(business.id)}
+              onToggleFavorite={onToggleFavorite}
+            />
           ))}
         </div>
       </div>
