@@ -1,10 +1,11 @@
 import { useState } from "react";
 
 type BusinessImageProps = {
-  src: string;
+  src?: string;
   alt: string;
   className?: string;
   imgClassName?: string;
+  fallbackLabel?: string;
 };
 
 export default function BusinessImage({
@@ -12,12 +13,13 @@ export default function BusinessImage({
   alt,
   className = "",
   imgClassName = "",
+  fallbackLabel = "Compass place",
 }: BusinessImageProps) {
   const [failed, setFailed] = useState(false);
 
   return (
     <div className={`relative overflow-hidden bg-[#17254a] ${className}`}>
-      {!failed ? (
+      {!failed && src ? (
         <img
           src={src}
           alt={alt}
@@ -33,7 +35,7 @@ export default function BusinessImage({
               +
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-[0.22em]">
-              Compass place
+              {fallbackLabel}
             </span>
           </div>
         </div>

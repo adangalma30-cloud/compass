@@ -21,11 +21,11 @@ function Navbar({
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between px-5 sm:px-6">
+      <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5" aria-label="Compass home">
           <CompassMark size={31} className="text-[#5667d6]" />
-          <span className="text-lg font-bold tracking-tight text-[#111b3a]">
+          <span className="text-base font-bold tracking-tight text-[#111b3a] sm:text-lg">
             Compass
           </span>
         </Link>
@@ -56,7 +56,7 @@ function Navbar({
           </button>
           <a
             href="/#discover"
-            className="rounded-xl bg-[#5365d1] px-3.5 py-2.5 text-sm font-semibold text-white shadow-[0_6px_16px_rgba(83,101,209,0.22)] transition-all hover:bg-[#6173e4] active:scale-95 sm:px-4"
+            className="whitespace-nowrap rounded-xl bg-[#5365d1] px-3 py-2.5 text-xs font-semibold text-white shadow-[0_6px_16px_rgba(83,101,209,0.22)] transition-all hover:bg-[#6173e4] active:scale-95 sm:px-4 sm:text-sm"
           >
             Get started
           </a>

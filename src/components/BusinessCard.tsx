@@ -31,10 +31,10 @@ function BusinessCard({
           <BusinessImage
             src={photo}
             alt={`${name} storefront or interior`}
-            className="h-48 w-full shrink-0 sm:h-auto sm:min-h-[12rem] sm:w-52"
+            className="aspect-[1.65] h-auto w-full shrink-0 sm:aspect-auto sm:h-auto sm:min-h-[12rem] sm:w-52"
           />
           <div className="min-w-0 flex-1 p-4 sm:p-5">
-            <div className="flex items-start justify-between gap-10">
+            <div className="flex items-start justify-between gap-4 pr-8 sm:gap-10 sm:pr-0">
               <div className="min-w-0">
                 <span className="mb-2 inline-flex rounded-full bg-[#eef1ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#4f5fc5]">
                   {category}
@@ -43,7 +43,7 @@ function BusinessCard({
                   {name}
                 </h3>
               </div>
-              <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#fff8e8] px-2 py-1">
+              <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#fff8e8] px-1.5 py-1 sm:px-2">
                 <span className="text-sm text-[#edaa2c]">★</span>
                 <span className="text-sm font-bold text-[#17213f]">{rating}</span>
               </div>
@@ -63,7 +63,7 @@ function BusinessCard({
                   {tag}
                 </span>
               ))}
-              <span className="ml-auto text-sm font-semibold text-[#5365cf] transition-transform group-hover:translate-x-0.5">
+              <span className="ml-auto whitespace-nowrap text-sm font-semibold text-[#5365cf] transition-transform group-hover:translate-x-0.5">
                 View →
               </span>
             </div>

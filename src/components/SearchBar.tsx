@@ -6,8 +6,8 @@ type SearchBarProps = {
 
 function SearchBar({ search, setSearch, resultCount }: SearchBarProps) {
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-      <div className="relative max-w-md flex-1">
+    <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+      <div className="relative w-full max-w-md flex-1">
         <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#7f8aa6]">
           ⌕
         </span>

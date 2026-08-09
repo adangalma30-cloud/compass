@@ -13,12 +13,29 @@ export default function CompassMark({ size = 32, className = "" }: CompassMarkPr
       viewBox="0 0 48 48"
       fill="none"
     >
-      <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="2.2" opacity="0.42" />
-      <circle cx="24" cy="24" r="15.5" stroke="currentColor" strokeWidth="1.2" opacity="0.34" />
-      <path d="M29.9 15.6 26.2 25.9l-10.1 6.5 3.7-10.3 10.1-6.5Z" fill="currentColor" />
-      <path d="m29.9 15.6-3.7 10.3-10.1 6.5 10.1-3.8 3.7-13Z" fill="#f15b5b" />
-      <circle cx="24" cy="24" r="3" fill="currentColor" />
-      <circle cx="24" cy="24" r="1.1" fill="#08142e" />
+      <defs>
+        <radialGradient id="compass-mark-glow" cx="50%" cy="36%" r="70%">
+          <stop offset="0" stopColor="currentColor" stopOpacity="0.22" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="compass-mark-north" x1="24" y1="9" x2="24" y2="27" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#F2F4FF" />
+          <stop offset="1" stopColor="#8794FF" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="21" fill="url(#compass-mark-glow)" />
+      <circle cx="24" cy="24" r="19" stroke="currentColor" strokeWidth="1.5" opacity="0.48" />
+      <circle cx="24" cy="24" r="15.5" stroke="currentColor" strokeWidth="0.9" opacity="0.3" />
+      <path
+        d="M24 9.25 27.65 23.05 24 24.75 20.35 23.05 24 9.25Z"
+        fill="url(#compass-mark-north)"
+      />
+      <path
+        d="M24 38.75 20.35 24.95 24 23.25 27.65 24.95 24 38.75Z"
+        fill="#F06464"
+      />
+      <circle cx="24" cy="24" r="3.15" fill="currentColor" />
+      <circle cx="24" cy="24" r="1.35" fill="#08142E" />
     </svg>
   );
 }

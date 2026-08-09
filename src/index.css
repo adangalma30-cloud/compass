@@ -23,6 +23,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+input,
+button,
+select {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
 /* ── Gradient text utility ───────────────────────────────── */
 
 .text-gradient {

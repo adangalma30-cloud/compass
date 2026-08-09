@@ -26,7 +26,8 @@ function FeaturedCard({
         <BusinessImage
           src={photo}
           alt={`${name} atmosphere`}
-          className="h-52 w-full sm:h-56"
+          fallbackLabel={category}
+          className="aspect-[1.45] h-auto w-full sm:aspect-[1.55]"
         />
         <div className="absolute left-4 top-4">
           <span className="rounded-full border border-white/25 bg-[#07122d]/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-md">
@@ -95,7 +96,7 @@ function FeaturedBusinesses({
   if (featured.length === 0) return null;
 
   return (
-    <section className="border-y border-[#e2e7f3] bg-[#f4f6fb] py-14 sm:py-16">
+    <section className="border-y border-[#e2e7f3] bg-[#f4f6fb] py-12 sm:py-16">
       <div className="mx-auto max-w-6xl px-5 sm:px-6">
         <div className="mb-7 flex items-end justify-between gap-4">
           <div>

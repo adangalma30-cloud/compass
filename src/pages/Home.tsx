@@ -103,7 +103,7 @@ function Home({ pageReady = true }: HomeProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbfcff]">
+    <div className="min-h-screen overflow-x-hidden bg-[#fbfcff]">
       {/* Navbar slides down from above */}
       <Navbar
         animate={pageReady}
@@ -139,7 +139,7 @@ function Home({ pageReady = true }: HomeProps) {
       </motion.div>
 
       {/* Browse / results section */}
-      <section id="discover" ref={resultsRef} className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-16">
+      <section id="discover" ref={resultsRef} className="mx-auto max-w-6xl scroll-mt-16 px-4 py-12 sm:px-6 sm:py-16">
         <motion.div
           {...fadeUp(0.35)}
           animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
