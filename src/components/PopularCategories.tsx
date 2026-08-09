@@ -6,10 +6,10 @@ type Category = {
 };
 
 const CATEGORIES: Category[] = [
-  { label: "Restaurant", icon: "🍽️", color: "text-orange-600", bg: "bg-orange-50 hover:bg-orange-100 border-orange-100 hover:border-orange-200" },
-  { label: "Café",       icon: "☕",  color: "text-amber-600",  bg: "bg-amber-50 hover:bg-amber-100 border-amber-100 hover:border-amber-200" },
-  { label: "Bar",        icon: "🍸",  color: "text-purple-600", bg: "bg-purple-50 hover:bg-purple-100 border-purple-100 hover:border-purple-200" },
-  { label: "Retail",     icon: "🛍️",  color: "text-teal-600",   bg: "bg-teal-50 hover:bg-teal-100 border-teal-100 hover:border-teal-200" },
+  { label: "Restaurant", icon: "R", color: "text-[#d66a52]", bg: "bg-[#fff2ed] hover:bg-[#ffe9e1] border-[#f8d9ce] hover:border-[#efb7a8]" },
+  { label: "Café",       icon: "C", color: "text-[#b58331]", bg: "bg-[#fff8e5] hover:bg-[#fff1c8] border-[#f2e1b3] hover:border-[#e6ca7c]" },
+  { label: "Bar",        icon: "B", color: "text-[#7661c8]", bg: "bg-[#f2efff] hover:bg-[#e9e4ff] border-[#ded6fa] hover:border-[#c3b7ef]" },
+  { label: "Retail",     icon: "S", color: "text-[#3f9690]", bg: "bg-[#eaf8f6] hover:bg-[#dcf2ef] border-[#cde9e5] hover:border-[#9fd5cf]" },
 ];
 
 type PopularCategoriesProps = {
@@ -25,38 +25,41 @@ function PopularCategories({ selected, onSelect, onScrollToResults }: PopularCat
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-16">
-      <div className="flex items-center justify-between mb-8">
+    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-16">
+      <div className="mb-7 flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#6673cc]">
+            Explore the city
+          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-[#111b3a]">
             Popular categories
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-[#697694]">
             Browse by what you're looking for
           </p>
         </div>
         <button
           onClick={() => { onSelect("All"); onScrollToResults(); }}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+          className="text-sm font-semibold text-[#5365d1] transition-colors hover:text-[#394aaa]"
         >
           View all →
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {CATEGORIES.map(({ label, icon, color, bg }) => {
           const isActive = selected === label;
           return (
             <button
               key={label}
               onClick={() => handleClick(label)}
-              className={`group flex flex-col items-center gap-3 p-6 rounded-2xl border transition-all ${
+              className={`group flex flex-col items-center gap-3 rounded-2xl border p-5 transition-all sm:p-6 ${
                 isActive
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]"
+                   ? "scale-[1.02] border-[#5365d1] bg-[#5365d1] text-white shadow-lg shadow-[#b9c1f0]"
                   : `${bg} border`
               }`}
             >
-              <span className="text-3xl">{icon}</span>
+              <span className={`flex h-11 w-11 items-center justify-center rounded-full bg-white/75 text-sm font-extrabold tracking-[0.12em] shadow-sm ${isActive ? "bg-white/15 text-white" : color}`}>{icon}</span>
               <span
                 className={`text-sm font-semibold ${
                   isActive ? "text-white" : color

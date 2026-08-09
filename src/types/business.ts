@@ -13,6 +13,7 @@ export type Business = {
   category: string;
   tags: string[];
   icon: string;
+  photo: string;
   featured?: boolean;
   // Detail page fields
   aiSummary?: string;

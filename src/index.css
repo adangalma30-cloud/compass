@@ -16,9 +16,9 @@ body,
 }
 
 body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: #f8fafc;
-  color: #111827;
+  font-family: "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
+  background: #fbfcff;
+  color: #111b3a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -26,10 +26,25 @@ body {
 /* ── Gradient text utility ───────────────────────────────── */
 
 .text-gradient {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 40%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #b8c1ff 46%, #8b96ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(83, 101, 209, 0.34);
+  outline-offset: 3px;
 }
 
 /* ── AI search glow (focus ring) ─────────────────────────── */

@@ -12,6 +12,8 @@ const businesses: Business[] = [
     category: "Retail",
     tags: ["books", "philosophy", "indie"],
     icon: "📚",
+    photo:
+      "https://images.unsplash.com/photo-1526243741027-444d633d7365?auto=format&fit=crop&w=1400&q=85",
     featured: true,
     aiSummary:
       "Third Eye is one of Portland's most distinctive independent bookshops. Its near-perfect rating across dozens of reviews reflects a shop that genuinely cares — about curation, about community, and about the kind of discovery that only happens when you wander the shelves. Best for seekers, readers, and anyone who considers bookshops a form of therapy.",
@@ -35,6 +37,8 @@ const businesses: Business[] = [
     category: "Café",
     tags: ["coffee", "pastries", "wifi"],
     icon: "☕",
+    photo:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1400&q=85",
     featured: true,
     aiSummary:
       "Joe's consistently ranks among Seattle's most-loved independent cafés. High marks across all categories — coffee quality, atmosphere, and service — make it a reliable choice whether you're working remotely or catching up with someone. The single-origin rotation attracts coffee enthusiasts, but it's welcoming enough for everyone else too.",
@@ -58,6 +62,8 @@ const businesses: Business[] = [
     category: "Retail",
     tags: ["electronics", "gadgets", "repair"],
     icon: "💻",
+    photo:
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1400&q=85",
     featured: false,
     aiSummary:
       "Tech World stands out in a category often dominated by impersonal chain stores. Reviewers consistently highlight knowledgeable staff and honest advice — a rarity. Solid choice for electronics purchases, repairs, or when you need someone to actually talk you through a decision.",
@@ -80,6 +86,8 @@ const businesses: Business[] = [
     category: "Restaurant",
     tags: ["brunch", "farm-to-table", "american"],
     icon: "🍽️",
+    photo:
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=85",
     featured: true,
     aiSummary:
       "The Golden Fork is one of Austin's most consistently praised restaurants in its category. Nearly 200 reviews at 4.7 stars is a strong signal — this isn't a place that peaked at opening. Expect seasonal menus, quality sourcing, and a room that's buzzy without being loud. Go for brunch if you can; go for dinner if you can't get a brunch reservation.",
@@ -103,6 +111,8 @@ const businesses: Business[] = [
     category: "Bar",
     tags: ["cocktails", "live music", "craft"],
     icon: "🍸",
+    photo:
+      "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1400&q=85",
     featured: true,
     aiSummary:
       "Moonrise is the kind of place that gets better the more you visit. The rotating cocktail menu rewards regulars, and the jazz nights draw a genuinely interesting crowd. Reviewers frequently mention the atmosphere as the main draw — which is high praise for a bar. Best experienced on a Thursday when the music is live.",
@@ -126,6 +136,8 @@ const businesses: Business[] = [
     category: "Retail",
     tags: ["flowers", "gifts", "workshops"],
     icon: "🌸",
+    photo:
+      "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1400&q=85",
     featured: false,
     aiSummary:
       "Bloom & Co earns its 4.8 rating through consistency and genuine craft. Reviewers mention the arrangements holding up significantly longer than supermarket flowers, and the workshops as a standout experience. Ideal for gifts, events, or anyone who wants something made with intention rather than pulled from a refrigerator.",
@@ -149,6 +161,8 @@ const businesses: Business[] = [
     category: "Restaurant",
     tags: ["japanese", "noodles", "vegetarian-friendly"],
     icon: "🍜",
+    photo:
+      "https://images.unsplash.com/photo-1569058242253-92a9efa7df2d?auto=format&fit=crop&w=1400&q=85",
     featured: false,
     aiSummary:
       "Soba Noodle House has the hallmarks of a place that will still be here in ten years: a focused menu, a clear point of view, and ratings that reflect genuine love rather than novelty hype. The 18-hour broth is mentioned in almost every positive review. Worth a visit if you want something quieter and more considered than the average Seattle dining experience.",
@@ -171,6 +185,8 @@ const businesses: Business[] = [
     category: "Café",
     tags: ["espresso", "specialty", "cozy"],
     icon: "☕",
+    photo:
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1400&q=85",
     featured: false,
     aiSummary:
       "Drift has the highest review count in its category and maintains a 4.9 — that combination is exceptionally rare and meaningful. Reviewers use words like 'perfect', 'consistent', and 'my favourite place in the city'. The Scandinavian aesthetic is understated and calming. Go early on weekends — it fills up and the wait is worth it, but you'll wish you'd arrived sooner.",

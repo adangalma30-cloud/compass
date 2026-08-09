@@ -103,7 +103,7 @@ function Home({ pageReady = true }: HomeProps) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#fbfcff]">
       {/* Navbar slides down from above */}
       <Navbar
         animate={pageReady}
@@ -139,16 +139,16 @@ function Home({ pageReady = true }: HomeProps) {
       </motion.div>
 
       {/* Browse / results section */}
-      <section id="discover" ref={resultsRef} className="max-w-6xl mx-auto px-6 py-16">
+      <section id="discover" ref={resultsRef} className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-16">
         <motion.div
           {...fadeUp(0.35)}
           animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           className="mb-8"
         >
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">
+          <h2 className="mb-1 text-2xl font-bold tracking-tight text-[#111b3a]">
             {isFiltering ? "Search results" : "Browse all"}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[#697694]">
             {isFiltering
               ? "Showing businesses matching your query"
               : "Every business on Compass, sorted by rating"}
@@ -174,7 +174,7 @@ function Home({ pageReady = true }: HomeProps) {
                   setSelectedCity(event.target.value);
                   setShowSaved(false);
                 }}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-xl border border-[#dfe4f0] bg-white px-3 py-3 text-sm text-[#65718e] shadow-sm focus:border-[#7080df] focus:outline-none focus:ring-4 focus:ring-[#7080df]/10"
               >
                 {cities.map((city) => <option key={city}>{city}</option>)}
               </select>
@@ -184,7 +184,7 @@ function Home({ pageReady = true }: HomeProps) {
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full rounded-xl border border-[#dfe4f0] bg-white px-3 py-3 text-sm text-[#65718e] shadow-sm focus:border-[#7080df] focus:outline-none focus:ring-4 focus:ring-[#7080df]/10"
               >
                 <option value="recommended">Sort: Recommended</option>
                 <option value="rating">Sort: Highest rated</option>
@@ -198,8 +198,8 @@ function Home({ pageReady = true }: HomeProps) {
                 onClick={() => setShowSaved((current) => !current)}
                 className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
                   showSaved
-                    ? "border-indigo-600 bg-indigo-600 text-white"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-indigo-300 hover:text-indigo-600"
+                     ? "border-[#5365d1] bg-[#5365d1] text-white"
+                     : "border-[#dfe4f0] bg-white text-[#65718e] hover:border-[#aab5ed] hover:text-[#5365d1]"
                 }`}
               >
                 {showSaved ? "Showing saved" : "Saved places"}
@@ -221,11 +221,11 @@ function Home({ pageReady = true }: HomeProps) {
               animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               className="text-center py-20"
             >
-              <p className="text-5xl mb-4">🔍</p>
-              <p className="text-lg font-semibold text-gray-700">
+              <p className="mb-4 text-5xl text-[#5365d1]">⌕</p>
+              <p className="text-lg font-semibold text-[#1a2544]">
                 No businesses found
               </p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="mt-2 text-sm text-[#7d88a4]">
                 Try adjusting your search or selecting a different category
               </p>
               <button
@@ -235,7 +235,7 @@ function Home({ pageReady = true }: HomeProps) {
                   setSelectedCity("All cities");
                   setShowSaved(false);
                 }}
-                className="mt-6 text-sm font-medium text-indigo-600 hover:text-indigo-700 underline-offset-2 hover:underline transition-all"
+                 className="mt-6 text-sm font-semibold text-[#5365d1] underline-offset-2 transition-all hover:text-[#394aaa] hover:underline"
               >
                 Clear all filters
               </button>
@@ -258,7 +258,7 @@ function Home({ pageReady = true }: HomeProps) {
                     city={business.city}
                     category={business.category}
                     tags={business.tags}
-                    icon={business.icon}
+                    photo={business.photo}
                     isFavorite={isFavorite(business.id)}
                     onToggleFavorite={toggleFavorite}
                   />
@@ -270,10 +270,10 @@ function Home({ pageReady = true }: HomeProps) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-          <div className="flex items-center gap-2 font-medium text-gray-600">
-            <span>🧭</span>
+      <footer className="border-t border-[#e4e8f2] bg-white">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-10 text-sm text-[#8a94ad] sm:flex-row sm:px-6">
+          <div className="flex items-center gap-2 font-semibold text-[#52618c]">
+            <span className="text-[#5365d1]">+</span>
             <span>Compass</span>
           </div>
           <p id="about">AI Recommends. People Decide.</p>

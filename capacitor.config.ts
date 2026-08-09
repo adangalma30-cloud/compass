@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "Compass",
   webDir: "dist",
   android: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#07132f",
   },
 };
 

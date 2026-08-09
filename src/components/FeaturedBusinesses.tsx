@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Business } from "../types/business";
+import BusinessImage from "./BusinessImage";
 
 type FeaturedCardProps = Business & {
   isFavorite?: boolean;
@@ -15,46 +16,44 @@ function FeaturedCard({
   city,
   category,
   tags,
-  icon,
+  photo,
   isFavorite,
   onToggleFavorite,
 }: FeaturedCardProps) {
   return (
-    <article className="relative flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden group-hover:border-indigo-100 group-hover:shadow-xl group-hover:shadow-indigo-50/80 transition-all duration-200 h-full">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[#e5eaf5] bg-white shadow-[0_10px_28px_rgba(28,45,88,0.07)] transition-all duration-300 hover:-translate-y-1 hover:border-[#cfd9f5] hover:shadow-[0_20px_42px_rgba(28,45,88,0.14)] active:scale-[0.99]">
       <Link to={`/business/${id}`} className="block h-full">
-        {/* Image area */}
-        <div className="relative h-36 bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center">
-          <span className="text-5xl">{icon}</span>
-          <span className="absolute top-3 right-3 text-xs font-semibold bg-white text-indigo-600 px-2.5 py-1 rounded-full shadow-sm border border-indigo-100">
+        <BusinessImage
+          src={photo}
+          alt={`${name} atmosphere`}
+          className="h-52 w-full sm:h-56"
+        />
+        <div className="absolute left-4 top-4">
+          <span className="rounded-full border border-white/25 bg-[#07122d]/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white backdrop-blur-md">
             {category}
           </span>
         </div>
-
-        {/* Body */}
-        <div className="flex flex-col flex-1 p-5">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 text-base leading-tight group-hover:text-indigo-700 transition-colors pr-8">
+        <div className="flex flex-1 flex-col p-5">
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <h3 className="pr-8 text-base font-bold leading-tight text-[#111b3a] transition-colors group-hover:text-[#4c5ec7]">
               {name}
             </h3>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-amber-400 text-sm">★</span>
-              <span className="text-sm font-semibold text-gray-900">{rating}</span>
+            <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#fff8e8] px-2 py-1">
+              <span className="text-sm text-[#edaa2c]">★</span>
+              <span className="text-sm font-bold text-[#17213f]">{rating}</span>
             </div>
           </div>
-
-          <p className="text-xs text-gray-400 mb-3">
-            📍 {city} &middot; {reviews.toLocaleString()} reviews
+          <p className="mb-3 text-xs font-medium text-[#7883a1]">
+            {city} <span className="mx-1 text-[#c5cbe0]">·</span> {reviews.toLocaleString()} reviews
           </p>
-
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-1 mb-4">
+          <p className="mb-4 line-clamp-3 flex-1 text-sm leading-relaxed text-[#5e6a88]">
             {description}
           </p>
-
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full"
+                className="rounded-full bg-[#f5f6fb] px-2.5 py-1 text-[11px] font-medium text-[#77829e]"
               >
                 {tag}
               </span>
@@ -68,10 +67,10 @@ function FeaturedCard({
           aria-label={isFavorite ? `Remove ${name} from saved places` : `Save ${name}`}
           aria-pressed={isFavorite}
           onClick={() => onToggleFavorite(id)}
-          className={`absolute right-3 top-3 z-10 h-8 w-8 rounded-full border text-lg transition-all ${
+          className={`absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border text-xl shadow-sm transition-all ${
             isFavorite
-              ? "border-indigo-100 bg-indigo-50 text-indigo-600"
-              : "border-white/80 bg-white text-gray-300 hover:border-indigo-100 hover:text-indigo-500"
+              ? "border-[#d9dcff] bg-[#eef1ff] text-[#5265d0]"
+              : "border-white/80 bg-white/90 text-[#7180a5] hover:border-[#d9dcff] hover:text-[#5265d0]"
           }`}
         >
           {isFavorite ? "♥" : "♡"}
@@ -96,24 +95,27 @@ function FeaturedBusinesses({
   if (featured.length === 0) return null;
 
   return (
-    <section className="bg-gray-50/80 border-y border-gray-100 py-16">
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex items-center justify-between mb-8">
+    <section className="border-y border-[#e2e7f3] bg-[#f4f6fb] py-14 sm:py-16">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6">
+        <div className="mb-7 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#6673cc]">
+              Community favourites
+            </p>
+            <h2 className="text-2xl font-bold tracking-tight text-[#111b3a]">
               Featured picks
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="mt-1 text-sm text-[#697694]">
               Highly rated and loved by the community
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-full">
-            <span>✦</span>
+          <div className="hidden items-center gap-1.5 rounded-full border border-[#d9def5] bg-white px-3 py-1.5 text-xs font-semibold text-[#5968c5] shadow-sm sm:flex">
+            <span className="text-[#ef6262]">●</span>
             <span>AI curated</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((business) => (
             <FeaturedCard
               key={business.id}

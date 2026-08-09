@@ -4,16 +4,18 @@ import Navbar from "../components/Navbar";
 import BusinessCard from "../components/BusinessCard";
 import businesses from "../data/businesses";
 import { useFavorites } from "../hooks/useFavorites";
+import BusinessImage from "../components/BusinessImage";
+import CompassMark from "../components/CompassMark";
 
 function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
-      <p className="text-5xl mb-4">🧭</p>
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Business not found</h1>
-      <p className="text-gray-500 mb-6">This listing may have moved or been removed.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfcff] px-6 text-center">
+      <CompassMark size={68} className="mb-4 text-[#5365d1]" />
+      <h1 className="mb-2 text-2xl font-bold text-[#111b3a]">Business not found</h1>
+      <p className="mb-6 text-[#697694]">This listing may have moved or been removed.</p>
       <Link
         to="/"
-        className="text-sm font-semibold bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors"
+        className="rounded-xl bg-[#5365d1] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#4354c0]"
       >
         Back to Compass
       </Link>
@@ -93,73 +95,73 @@ export default function BusinessDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f5f7fc]">
       <Navbar />
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="mx-auto max-w-5xl px-5 py-6 sm:px-6 sm:py-8">
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-8 transition-colors group"
+          className="group mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#697694] transition-colors hover:text-[#1c2a51] sm:mb-8"
         >
           <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
           Back to results
         </button>
 
         {/* Hero card */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 mb-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-6 items-start">
-            {/* Icon */}
-            <div className="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100 flex items-center justify-center text-4xl md:text-5xl shadow-inner">
-              {business.icon}
-            </div>
-
-            {/* Meta */}
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <span className="text-xs font-semibold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full">
-                  {business.category}
-                </span>
-                <span className="text-xs text-gray-400">📍 {business.city}</span>
-              </div>
-
-              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight mb-3">
-                {business.name}
-              </h1>
-
-              <StarRow rating={business.rating} reviews={business.reviews} />
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                {business.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs text-gray-500 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full"
-                  >
-                    {tag}
+        <div className="mb-6 overflow-hidden rounded-[1.75rem] border border-[#e1e6f2] bg-white shadow-[0_14px_36px_rgba(28,45,88,0.08)]">
+          <BusinessImage
+            src={business.photo}
+            alt={`${business.name} interior`}
+            className="h-64 w-full sm:h-80 md:h-[26rem]"
+          />
+          <div className="p-5 sm:p-8">
+            <div className="flex flex-col items-start gap-5 sm:flex-row">
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-[#eef1ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#5365d1]">
+                    {business.category}
                   </span>
-                ))}
+                  <span className="text-xs font-medium text-[#7883a1]">{business.city}</span>
+                </div>
+
+                <h1 className="mb-3 text-3xl font-extrabold tracking-tight text-[#111b3a] sm:text-4xl">
+                  {business.name}
+                </h1>
+
+                <StarRow rating={business.rating} reviews={business.reviews} />
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {business.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-[#e4e8f2] bg-[#f7f8fc] px-3 py-1 text-xs text-[#697694]"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => toggleFavorite(business.id)}
-                className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
-                  isFavorite(business.id)
-                    ? "border-indigo-600 bg-indigo-600 text-white"
-                    : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:text-indigo-600"
-                }`}
-              >
-                {isFavorite(business.id) ? "Saved" : "Save place"}
-              </button>
-              <button
-                type="button"
-                onClick={handleShare}
-                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
-              >
-                {shareCopied ? "Link copied" : "Share"}
-              </button>
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => toggleFavorite(business.id)}
+                  className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+                    isFavorite(business.id)
+                      ? "border-[#5365d1] bg-[#5365d1] text-white"
+                      : "border-[#dfe4f0] bg-white text-[#65718e] hover:border-[#aab5ed] hover:text-[#5365d1]"
+                  }`}
+                >
+                  {isFavorite(business.id) ? "Saved" : "Save place"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="rounded-xl border border-[#dfe4f0] bg-white px-4 py-2 text-sm font-semibold text-[#65718e] transition-colors hover:border-[#aab5ed] hover:text-[#5365d1]"
+                >
+                  {shareCopied ? "Link copied" : "Share"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -170,10 +172,10 @@ export default function BusinessDetail() {
           <div className="lg:col-span-2 space-y-6">
             {/* AI Recommends */}
             {business.aiSummary && (
-              <div className="bg-slate-950 rounded-2xl p-6 text-white">
+              <div className="rounded-2xl bg-[#07132f] p-6 text-white shadow-[0_12px_30px_rgba(7,19,47,0.16)]">
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-indigo-400 text-base">✦</span>
-                  <span className="text-xs font-semibold text-indigo-300 uppercase tracking-widest">
+                  <span className="text-base text-[#9da8ff]">+</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#aeb8ff]">
                     AI Recommends
                   </span>
                 </div>
@@ -182,15 +184,15 @@ export default function BusinessDetail() {
                 </p>
                 <p className="text-slate-600 text-xs mt-4">
                   Based on ratings, reviews, and community signals ·{" "}
-                  <span className="italic">AI Recommends. People Decide.</span>
+                    <span className="italic text-[#8190c5]">AI Recommends. People Decide.</span>
                 </p>
               </div>
             )}
 
             {/* About */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="text-base font-bold text-gray-900 mb-3">About</h2>
-              <p className="text-gray-600 text-sm leading-relaxed">
+            <div className="rounded-2xl border border-[#e1e6f2] bg-white p-6">
+              <h2 className="mb-3 text-base font-bold text-[#111b3a]">About</h2>
+              <p className="text-sm leading-relaxed text-[#5e6a88]">
                 {business.description}
               </p>
             </div>
@@ -198,8 +200,8 @@ export default function BusinessDetail() {
 
           {/* Right: Business info */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="text-base font-bold text-gray-900 mb-4">
+            <div className="rounded-2xl border border-[#e1e6f2] bg-white p-6">
+              <h2 className="mb-4 text-base font-bold text-[#111b3a]">
                 Business info
               </h2>
 
@@ -207,7 +209,7 @@ export default function BusinessDetail() {
                 {/* Hours */}
                 {business.hours && business.hours.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
                       Hours
                     </p>
                     <div className="space-y-1.5">
@@ -216,12 +218,12 @@ export default function BusinessDetail() {
                           key={h.days}
                           className="flex justify-between gap-4"
                         >
-                          <span className="text-gray-500 shrink-0">{h.days}</span>
+                           <span className="shrink-0 text-[#697694]">{h.days}</span>
                           <span
                             className={`text-right font-medium ${
                               h.time === "Closed"
-                                ? "text-gray-400"
-                                : "text-gray-900"
+                                 ? "text-[#9aa4bc]"
+                                 : "text-[#1c2a51]"
                             }`}
                           >
                             {h.time}
@@ -235,22 +237,22 @@ export default function BusinessDetail() {
                 {/* Address */}
                 {business.address && (
                   <div className="pt-4 border-t border-gray-50">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
                       Address
                     </p>
-                    <p className="text-gray-700">{business.address}</p>
+                     <p className="text-[#53617e]">{business.address}</p>
                   </div>
                 )}
 
                 {/* Phone */}
                 {business.phone && (
                   <div className="pt-4 border-t border-gray-50">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
                       Phone
                     </p>
                     <a
                       href={`tel:${business.phone}`}
-                      className="text-indigo-600 hover:text-indigo-700 transition-colors"
+                       className="text-[#5365d1] transition-colors hover:text-[#394aaa]"
                     >
                       {business.phone}
                     </a>
@@ -260,14 +262,14 @@ export default function BusinessDetail() {
                 {/* Website */}
                 {business.website && (
                   <div className="pt-4 border-t border-gray-50">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
                       Website
                     </p>
                     <a
                       href={`https://${business.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-600 hover:text-indigo-700 transition-colors break-all"
+                       className="break-all text-[#5365d1] transition-colors hover:text-[#394aaa]"
                     >
                       {business.website} ↗
                     </a>
@@ -287,7 +289,7 @@ export default function BusinessDetail() {
             <p className="text-sm text-gray-500 mb-5">
               Other businesses you might like
             </p>
-            <div className="grid gap-3">
+            <div className="grid gap-4">
               {related.map((b) => (
                 <BusinessCard
                   key={b.id}
@@ -299,7 +301,7 @@ export default function BusinessDetail() {
                   city={b.city}
                   category={b.category}
                   tags={b.tags}
-                  icon={b.icon}
+                  photo={b.photo}
                   isFavorite={isFavorite(b.id)}
                   onToggleFavorite={toggleFavorite}
                 />
@@ -310,13 +312,13 @@ export default function BusinessDetail() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 bg-white mt-16">
-        <div className="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
+      <footer className="mt-16 border-t border-[#e4e8f2] bg-white">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-5 py-10 text-sm text-[#8a94ad] sm:flex-row sm:px-6">
           <Link
             to="/"
-            className="flex items-center gap-2 font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 font-semibold text-[#52618c] transition-colors hover:text-[#1c2a51]"
           >
-            <span>🧭</span>
+            <CompassMark size={24} className="text-[#5365d1]" />
             <span>Compass</span>
           </Link>
           <p>AI Recommends. People Decide.</p>

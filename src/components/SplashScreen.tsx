@@ -4,7 +4,7 @@
  * Full-screen branded loading experience for Compass.
  * Plays once per browser session (gated via sessionStorage).
  *
- * Animation sequence (~3.5 s):
+ * Animation sequence (~2.1 s):
  *  0.2 s  → outer ring draws itself
  *  0.8 s  → radar pulses begin expanding
  *  0.9 s  → needle starts spinning
@@ -12,7 +12,7 @@
  *  1.4 s  → "Compass" + tagline fade in
  *  1.5 s  → loading messages start cycling every 700 ms
  *  2.7 s  → needle locks to North with spring ease
- *  3.5 s  → splash fades out, onComplete fires
+ *  2.1 s  → splash fades out, onComplete fires
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -31,9 +31,9 @@ const MESSAGES = [
   "Ready.",
 ] as const;
 
-const MESSAGE_INTERVAL_MS = 700;
-const TOTAL_DURATION_MS   = 3500;
-const FADE_OUT_DURATION_S = 0.55;
+const MESSAGE_INTERVAL_MS = 520;
+const TOTAL_DURATION_MS   = 2100;
+const FADE_OUT_DURATION_S = 0.42;
 
 // SVG viewBox is 300 × 300; compass centre is (150, 150).
 const CX = 150;
@@ -104,14 +104,14 @@ export default function SplashScreen({ onComplete }: Props) {
         <motion.div
           key="splash"
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none"
-          style={{ backgroundColor: "#0B0B0F" }}
+           style={{ backgroundColor: "#07132f" }}
           exit={{ opacity: 0 }}
           transition={{ duration: FADE_OUT_DURATION_S, ease: "easeInOut" }}
           aria-label="Loading Compass"
           aria-live="polite"
         >
           {/* ── Compass SVG ─────────────────────────────── */}
-          <div className="relative" style={{ width: 300, height: 300 }}>
+           <div className="relative max-w-[72vw]" style={{ width: 300, height: 300 }}>
             <svg
               viewBox="0 0 300 300"
               width={300}
@@ -278,8 +278,8 @@ export default function SplashScreen({ onComplete }: Props) {
             transition={{ delay: 1.4, duration: 0.6, ease: "easeOut" }}
           >
             {/* Wordmark */}
-            <p
-              className="text-4xl font-extrabold tracking-tight"
+             <p
+               className="text-4xl font-extrabold tracking-tight"
               style={{ color: "#FFFFFF" }}
             >
               Compass
