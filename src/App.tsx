@@ -6,14 +6,25 @@ import SplashScreen from "./components/SplashScreen";
 
 // Show splash once per browser session.
 const SESSION_KEY = "compass-splash-seen";
-const hasSeenSplash = sessionStorage.getItem(SESSION_KEY) === "true";
+
+function getHasSeenSplash(): boolean {
+  try {
+    return sessionStorage.getItem(SESSION_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
 
 function App() {
   // If the user has already seen the splash this session, skip straight to app.
-  const [splashDone, setSplashDone] = useState(hasSeenSplash);
+  const [splashDone, setSplashDone] = useState(getHasSeenSplash);
 
   function handleSplashComplete() {
-    sessionStorage.setItem(SESSION_KEY, "true");
+    try {
+      sessionStorage.setItem(SESSION_KEY, "true");
+    } catch {
+      // The app can continue when WebView storage is unavailable.
+    }
     setSplashDone(true);
   }
 

@@ -19,7 +19,11 @@ export function useFavorites() {
   const [favoriteIds, setFavoriteIds] = useState<number[]>(readFavorites);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteIds));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteIds));
+    } catch {
+      // Favorites remain available in memory for the current session.
+    }
   }, [favoriteIds]);
 
   const toggleFavorite = useCallback((id: number) => {

@@ -79,9 +79,13 @@ export default function BusinessDetail() {
       await navigator.share(shareData);
       return;
     }
-    await navigator.clipboard.writeText(window.location.href);
-    setShareCopied(true);
-    window.setTimeout(() => setShareCopied(false), 2200);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 2200);
+    } catch {
+      setShareCopied(false);
+    }
   }
 
   const related = businesses.filter(
