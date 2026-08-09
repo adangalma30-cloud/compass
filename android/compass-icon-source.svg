@@ -1,22 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
   <defs>
-    <radialGradient id="halo" cx="50%" cy="32%" r="70%">
-      <stop offset="0" stop-color="#5667D6" stop-opacity=".42"/>
+    <radialGradient id="halo" cx="50%" cy="34%" r="68%">
+      <stop offset="0" stop-color="#AEB7FF" stop-opacity=".22"/>
       <stop offset="1" stop-color="#5667D6" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="north" x1="96" y1="37" x2="96" y2="101" gradientUnits="userSpaceOnUse">
+    <linearGradient id="north" x1="96" y1="31" x2="96" y2="101" gradientUnits="userSpaceOnUse">
       <stop stop-color="#F7F8FF"/>
-      <stop offset="1" stop-color="#8794FF"/>
+      <stop offset="1" stop-color="#8B97FF"/>
     </linearGradient>
   </defs>
   <rect width="192" height="192" rx="42" fill="#07132F"/>
-  <circle cx="96" cy="96" r="78" fill="#182A62"/>
-  <circle cx="96" cy="96" r="67" fill="url(#halo)"/>
-  <circle cx="96" cy="96" r="68" fill="none" stroke="#7180EF" stroke-opacity=".48" stroke-width="2"/>
-  <circle cx="96" cy="96" r="56" fill="none" stroke="#9BA5FF" stroke-opacity=".18" stroke-width="1.5"/>
-  <path d="M96 33 113 91.5 96 99 79 91.5 96 33Z" fill="url(#north)"/>
-  <path d="M96 159 79 100.5 96 93 113 100.5 96 159Z" fill="#F06464"/>
-  <path d="M96 43 104 91.5 96 97 88 91.5 96 43Z" fill="#AAB3FF" fill-opacity=".68"/>
-  <circle cx="96" cy="96" r="16" fill="#5667D6"/>
-  <circle cx="96" cy="96" r="8" fill="#FFF"/>
+  <circle cx="96" cy="96" r="80" fill="#15265A"/>
+  <circle cx="96" cy="96" r="66" fill="#263D84" fill-opacity=".72"/>
+  <circle cx="96" cy="96" r="58" fill="url(#halo)"/>
+  <circle cx="96" cy="96" r="75" fill="none" stroke="#A7B0FF" stroke-opacity=".3" stroke-width="2"/>
+  <circle cx="96" cy="96" r="59" fill="none" stroke="#9BA5FF" stroke-opacity=".16" stroke-width="1.5"/>
+  <path d="M96 32 114 91 96 99 78 91 96 32Z" fill="url(#north)"/>
+  <path d="M96 160 78 101 96 93 114 101 96 160Z" fill="#F06464"/>
+  <path d="M96 43 104 91 96 97 88 91 96 43Z" fill="#8B97FF" fill-opacity=".9"/>
+  <circle cx="96" cy="96" r="17" fill="#5367D5"/>
+  <circle cx="96" cy="96" r="8.4" fill="#FFF"/>
 </svg>
