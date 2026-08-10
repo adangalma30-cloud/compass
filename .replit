@@ -2,13 +2,3 @@ modules = ["nodejs-24"]
 
 [nix]
 channel = "stable-25_05"
-
-[[ports]]
-localPort = 4173
-externalPort = 3000
-exposeLocalhost = true
-
-[[ports]]
-localPort = 5174
-externalPort = 80
-exposeLocalhost = true
