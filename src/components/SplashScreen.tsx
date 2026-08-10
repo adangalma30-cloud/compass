@@ -103,19 +103,49 @@ export default function SplashScreen({ onComplete }: Props) {
       {visible && (
         <motion.div
           key="splash"
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center select-none"
-           style={{ backgroundColor: "#07132f" }}
+         className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden select-none"
+           style={{
+             background:
+               "radial-gradient(circle at 50% 39%, #1c2e6d 0%, #0d1d48 32%, #07132f 68%, #050b22 100%)",
+           }}
           exit={{ opacity: 0 }}
           transition={{ duration: FADE_OUT_DURATION_S, ease: "easeInOut" }}
           aria-label="Loading Compass"
           aria-live="polite"
         >
-          {/* ── Compass SVG ─────────────────────────────── */}
-           <div className="relative max-w-[72vw]" style={{ width: 300, height: 300 }}>
+           {/* Ambient layers keep the native splash and web animation visually connected. */}
+           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+             <div
+               className="absolute left-1/2 top-[39%] h-[min(30rem,88vw)] w-[min(30rem,88vw)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70 blur-3xl"
+               style={{
+                 background:
+                   "radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(37,58,132,0.08) 48%, transparent 72%)",
+               }}
+             />
+             <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#030817]/35 to-transparent" />
+           </div>
+
+           {/* ── Compass SVG ─────────────────────────────── */}
+           <div
+             className="relative z-10 max-w-[72vw]"
+             style={{ width: "min(300px, 72vw)", height: "min(300px, 72vw)" }}
+           >
+             <motion.div
+               className="absolute inset-[7%] rounded-full border border-[#8f9bff]/20"
+               style={{
+                 background:
+                   "radial-gradient(circle at 38% 28%, rgba(83,101,209,0.3), rgba(8,21,57,0.78) 70%)",
+                 boxShadow:
+                   "0 0 0 1px rgba(143,155,255,0.08), 0 0 58px rgba(78,91,220,0.16)",
+               }}
+               initial={{ opacity: 0, scale: 0.88 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ delay: 0.08, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+             />
             <svg
               viewBox="0 0 300 300"
-              width={300}
-              height={300}
+               width="100%"
+               height="100%"
               overflow="visible"
             >
               <defs>
@@ -279,7 +309,7 @@ export default function SplashScreen({ onComplete }: Props) {
           >
             {/* Wordmark */}
              <p
-               className="text-4xl font-extrabold tracking-tight"
+               className="text-3xl font-extrabold tracking-tight sm:text-4xl"
               style={{ color: "#FFFFFF" }}
             >
               Compass

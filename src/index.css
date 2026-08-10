@@ -13,11 +13,11 @@ body,
 #root {
   width: 100%;
   min-height: 100vh;
+  background: #07132f;
 }
 
 body {
   font-family: "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
-  background: #fbfcff;
   color: #111b3a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

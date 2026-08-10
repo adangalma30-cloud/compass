@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premium fallback surface used between the native splash and the WebView. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:centerX="50%"
+        android:centerY="39%"
+        android:gradientRadius="78%"
+        android:startColor="#1C2E6D"
+        android:centerColor="#0D1D48"
+        android:endColor="#050B22" />
+</shape>
