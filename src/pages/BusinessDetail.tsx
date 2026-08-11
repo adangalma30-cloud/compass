@@ -5,17 +5,17 @@ import BusinessCard from "../components/BusinessCard";
 import businesses from "../data/businesses";
 import { useFavorites } from "../hooks/useFavorites";
 import BusinessImage from "../components/BusinessImage";
-import CompassMark from "../components/CompassMark";
+import Icon from "../components/Icon";
 
 function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfcff] px-6 text-center">
-      <CompassMark size={68} className="mb-4 text-[#5365d1]" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#fbfcff] px-6 text-center">
+       <span className="mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-[#5365d1] text-white"><Icon name="compass" size={34} /></span>
       <h1 className="mb-2 text-2xl font-bold text-[#111b3a]">Business not found</h1>
       <p className="mb-6 text-[#697694]">This listing may have moved or been removed.</p>
-      <Link
+       <Link
         to="/"
-        className="rounded-xl bg-[#5365d1] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#4354c0]"
+         className="rounded-xl bg-[#5365d1] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4354c0]"
       >
         Back to Compass
       </Link>
@@ -27,12 +27,12 @@ function StarRow({ rating, reviews }: { rating: number; reviews: number }) {
   const full = Math.floor(rating);
   const partial = rating % 1 >= 0.5;
   return (
-    <div className="flex items-center gap-2">
+    <div className="detail-rating">
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }, (_, i) => (
           <span
             key={i}
-            className={`text-lg ${
+            className={`text-sm ${
               i < full
                 ? "text-amber-400"
                 : i === full && partial
@@ -45,7 +45,7 @@ function StarRow({ rating, reviews }: { rating: number; reviews: number }) {
         ))}
       </div>
       <span className="text-sm font-bold text-gray-900">{rating}</span>
-      <span className="text-sm text-gray-400">
+      <span className="text-xs text-gray-400">
         ({reviews.toLocaleString()} reviews)
       </span>
     </div>
@@ -95,71 +95,71 @@ export default function BusinessDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f7fc]">
+    <div className="detail-page">
       <Navbar />
 
-      <main className="mx-auto max-w-5xl px-5 py-6 sm:px-6 sm:py-8">
+      <main className="detail-main">
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="group mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#697694] transition-colors hover:text-[#1c2a51] sm:mb-8"
+          className="detail-back"
         >
-          <span className="group-hover:-translate-x-0.5 transition-transform">←</span>
+          <Icon name="arrow-left" size={16} />
           Back to results
         </button>
 
         {/* Hero card */}
-        <div className="mb-6 overflow-hidden rounded-[1.75rem] border border-[#e1e6f2] bg-white shadow-[0_14px_36px_rgba(28,45,88,0.08)]">
+        <div className="detail-hero-card">
           <BusinessImage
             src={business.photo}
             alt={`${business.name} interior`}
-            className="h-64 w-full sm:h-80 md:h-[26rem]"
+             className="detail-hero-image"
           />
-          <div className="p-5 sm:p-8">
-            <div className="flex flex-col items-start gap-5 sm:flex-row">
-              <div className="min-w-0 flex-1">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-[#eef1ff] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#5365d1]">
+           <div className="detail-hero-content">
+             <div className="detail-title-row">
+               <div className="min-w-0">
+                 <div className="detail-eyebrows">
+                   <span className="detail-category">
                     {business.category}
                   </span>
-                  <span className="text-xs font-medium text-[#7883a1]">{business.city}</span>
+                   <span className="detail-city"><Icon name="map-pin" size={13} /> {business.city}</span>
                 </div>
 
-                <h1 className="mb-3 text-3xl font-extrabold tracking-tight text-[#111b3a] sm:text-4xl">
+                 <h1 className="detail-title">
                   {business.name}
                 </h1>
 
                 <StarRow rating={business.rating} reviews={business.reviews} />
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                 <div className="detail-tags">
                   {business.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-[#e4e8f2] bg-[#f7f8fc] px-3 py-1 text-xs text-[#697694]"
+                       className="business-tag"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+               <div className="detail-actions">
                 <button
                   type="button"
                   onClick={() => toggleFavorite(business.id)}
-                  className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+                   className={`detail-action ${isFavorite(business.id) ? "active" : ""} ${
                     isFavorite(business.id)
                       ? "border-[#5365d1] bg-[#5365d1] text-white"
                       : "border-[#dfe4f0] bg-white text-[#65718e] hover:border-[#aab5ed] hover:text-[#5365d1]"
                   }`}
                 >
-                  {isFavorite(business.id) ? "Saved" : "Save place"}
+                   <Icon name="heart" size={17} filled={isFavorite(business.id)} /> {isFavorite(business.id) ? "Saved" : "Save"}
                 </button>
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="rounded-xl border border-[#dfe4f0] bg-white px-4 py-2 text-sm font-semibold text-[#65718e] transition-colors hover:border-[#aab5ed] hover:text-[#5365d1]"
+                   className="detail-action"
                 >
-                  {shareCopied ? "Link copied" : "Share"}
+                   <Icon name="share" size={17} /> {shareCopied ? "Copied" : "Share"}
                 </button>
               </div>
             </div>
@@ -167,22 +167,22 @@ export default function BusinessDetail() {
         </div>
 
         {/* Body grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <div className="detail-grid">
           {/* Left: AI + About */}
-          <div className="lg:col-span-2 space-y-6">
+           <div className="detail-column">
             {/* AI Recommends */}
             {business.aiSummary && (
-              <div className="rounded-2xl bg-[#07132f] p-6 text-white shadow-[0_12px_30px_rgba(7,19,47,0.16)]">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-base text-[#9da8ff]">+</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest text-[#aeb8ff]">
+               <div className="recommendation-card">
+                 <div className="recommendation-label">
+                   <Icon name="spark" size={15} />
+                   <span>
                     AI Recommends
                   </span>
                 </div>
-                <p className="text-slate-200 text-sm leading-relaxed">
+                 <p>
                   {business.aiSummary}
                 </p>
-                <p className="text-slate-600 text-xs mt-4">
+                 <p className="recommendation-note">
                   Based on ratings, reviews, and community signals ·{" "}
                     <span className="italic text-[#8190c5]">AI Recommends. People Decide.</span>
                 </p>
@@ -190,35 +190,35 @@ export default function BusinessDetail() {
             )}
 
             {/* About */}
-            <div className="rounded-2xl border border-[#e1e6f2] bg-white p-6">
-              <h2 className="mb-3 text-base font-bold text-[#111b3a]">About</h2>
-              <p className="text-sm leading-relaxed text-[#5e6a88]">
+             <div className="detail-panel">
+               <h2>About</h2>
+               <p>
                 {business.description}
               </p>
             </div>
           </div>
 
           {/* Right: Business info */}
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-[#e1e6f2] bg-white p-6">
-              <h2 className="mb-4 text-base font-bold text-[#111b3a]">
+           <div className="detail-column">
+             <div className="detail-panel">
+               <h2>
                 Business info
               </h2>
 
-              <div className="space-y-4 text-sm">
+               <div className="detail-info">
                 {/* Hours */}
                 {business.hours && business.hours.length > 0 && (
-                  <div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
+                   <div className="detail-info-block">
+                     <p>
                       Hours
                     </p>
-                    <div className="space-y-1.5">
+                     <div className="hours-list">
                       {business.hours.map((h) => (
                         <div
                           key={h.days}
-                          className="flex justify-between gap-4"
+                           className="flex justify-between gap-4"
                         >
-                           <span className="shrink-0 text-[#697694]">{h.days}</span>
+                            <span className="shrink-0 text-[#697694]">{h.days}</span>
                           <span
                             className={`text-right font-medium ${
                               h.time === "Closed"
@@ -236,23 +236,22 @@ export default function BusinessDetail() {
 
                 {/* Address */}
                 {business.address && (
-                  <div className="pt-4 border-t border-gray-50">
-                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
+                   <div className="detail-info-block">
+                      <p>
                       Address
                     </p>
-                     <p className="text-[#53617e]">{business.address}</p>
+                      <p><Icon name="map-pin" size={15} /> {business.address}</p>
                   </div>
                 )}
 
                 {/* Phone */}
                 {business.phone && (
-                  <div className="pt-4 border-t border-gray-50">
-                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
+                   <div className="detail-info-block">
+                      <p>
                       Phone
                     </p>
-                    <a
+                     <a className="detail-link"
                       href={`tel:${business.phone}`}
-                       className="text-[#5365d1] transition-colors hover:text-[#394aaa]"
                     >
                       {business.phone}
                     </a>
@@ -261,15 +260,14 @@ export default function BusinessDetail() {
 
                 {/* Website */}
                 {business.website && (
-                  <div className="pt-4 border-t border-gray-50">
-                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#8a94ad]">
+                   <div className="detail-info-block">
+                      <p>
                       Website
                     </p>
-                    <a
+                     <a className="detail-link"
                       href={`https://${business.website}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                       className="break-all text-[#5365d1] transition-colors hover:text-[#394aaa]"
                     >
                       {business.website} ↗
                     </a>
@@ -282,14 +280,14 @@ export default function BusinessDetail() {
 
         {/* Related businesses */}
         {related.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+           <div className="related-section">
+             <h2>
               More in {business.category}
             </h2>
-            <p className="text-sm text-gray-500 mb-5">
+             <p>
               Other businesses you might like
             </p>
-            <div className="grid gap-4">
+             <div className="grid gap-3">
               {related.map((b) => (
                 <BusinessCard
                   key={b.id}
@@ -312,13 +310,13 @@ export default function BusinessDetail() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-[#e4e8f2] bg-white">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 px-5 py-10 text-sm text-[#8a94ad] sm:flex-row sm:px-6">
+       <footer>
+         <div>
           <Link
             to="/"
-            className="flex items-center gap-2 font-semibold text-[#52618c] transition-colors hover:text-[#1c2a51]"
+             className="brand-lockup"
           >
-            <CompassMark size={24} className="text-[#5365d1]" />
+             <span className="brand-mark"><Icon name="compass" size={18} /></span>
             <span>Compass</span>
           </Link>
           <p>AI Recommends. People Decide.</p>

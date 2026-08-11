@@ -38,47 +38,47 @@ function PopularCategories({ selected, onSelect, onScrollToResults }: PopularCat
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-16">
-      <div className="mb-7 flex items-end justify-between gap-4">
+    <section className="category-section">
+      <div className="section-heading">
         <div>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#6673cc]">
+          <p className="section-kicker">
             Explore the city
           </p>
-          <h2 className="text-2xl font-bold tracking-tight text-[#111b3a]">
+          <h2>
             Popular categories
           </h2>
-          <p className="mt-1 text-sm text-[#697694]">
+          <p>
             Browse by what you're looking for
           </p>
         </div>
         <button
           onClick={() => { onSelect("All"); onScrollToResults(); }}
-          className="text-sm font-semibold text-[#5365d1] transition-colors hover:text-[#394aaa]"
+          className="section-link"
         >
-          View all →
+          View all
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="category-row">
         {CATEGORIES.map(({ label, icon, color, bg }) => {
           const isActive = selected === label;
           return (
             <button
               key={label}
               onClick={() => handleClick(label)}
-              className={`group flex flex-col items-center gap-3 rounded-2xl border p-5 transition-all sm:p-6 ${
+              className={`category-tile ${isActive ? "selected" : ""} ${!isActive ? bg : ""} ${
                 isActive
-                   ? "scale-[1.02] border-[#5365d1] bg-[#5365d1] text-white shadow-lg shadow-[#b9c1f0]"
-                  : `${bg} border`
+                  ? "text-white"
+                  : ""
               }`}
             >
-              <span className={`flex h-11 w-11 items-center justify-center rounded-full bg-white/75 shadow-sm ${isActive ? "bg-white/15 text-white" : color}`}>
+              <span className={`category-icon ${isActive ? "selected" : color}`}>
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                   <CategoryIcon type={icon} />
                 </svg>
               </span>
               <span
-                className={`text-sm font-semibold ${
+                className={`category-label ${
                   isActive ? "text-white" : color
                 }`}
               >

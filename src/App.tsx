@@ -2,12 +2,16 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import BusinessDetail from "./pages/BusinessDetail";
+import Auth from "./pages/Auth";
 import SplashScreen from "./components/SplashScreen";
 
 // Show splash once per browser session.
 const SESSION_KEY = "compass-splash-seen";
 
 function getHasSeenSplash(): boolean {
+  // Deep links to auth should be immediately usable; the launch animation
+  // remains intact for the normal home-screen entry.
+  if (window.location.pathname === "/auth") return true;
   try {
     return sessionStorage.getItem(SESSION_KEY) === "true";
   } catch {
@@ -40,6 +44,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home pageReady={splashDone} />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/business/:id" element={<BusinessDetail />} />
         </Routes>
       </BrowserRouter>

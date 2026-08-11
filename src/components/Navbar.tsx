@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import CompassMark from "./CompassMark";
+import { Link, useNavigate } from "react-router-dom";
+import Icon from "./Icon";
 
 type NavbarProps = {
   /** When true the navbar slides down into view. Default true. */
@@ -14,52 +14,36 @@ function Navbar({
   savedCount = 0,
   onSavedClick,
 }: NavbarProps) {
+  const navigate = useNavigate();
   return (
     <motion.nav
-      className="sticky top-0 z-50 border-b border-[#e4e8f2]/80 bg-white/85 backdrop-blur-md"
+      className="app-toolbar"
       initial={animate ? { y: -64, opacity: 0 } : false}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[4.5rem] sm:px-6">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5" aria-label="Compass home">
-          <CompassMark size={31} className="text-[#5667d6]" />
-          <span className="text-base font-bold tracking-tight text-[#111b3a] sm:text-lg">
-            Compass
-          </span>
+      <div className="toolbar-inner">
+        <Link to="/" className="brand-lockup" aria-label="Compass home">
+          <span className="brand-mark"><Icon name="compass" size={21} /></span>
+          <span>Compass</span>
         </Link>
-
-        {/* Nav links */}
-        <div className="hidden items-center gap-8 text-sm font-semibold text-[#77829f] md:flex">
-          <a href="/#discover" className="transition-colors hover:text-[#1c2a51]">
-            Explore
-          </a>
-          <a
-            href="mailto:hello@compass.local?subject=Compass business listing"
-            className="transition-colors hover:text-[#1c2a51]"
-          >
-            For Business
-          </a>
-          <a href="/#about" className="transition-colors hover:text-[#1c2a51]">
-            About
-          </a>
-        </div>
-
-        {/* CTA */}
-        <div className="flex items-center gap-2.5">
+        <div className="toolbar-actions">
           <button
+            type="button"
             onClick={onSavedClick}
-            className="hidden text-sm font-semibold text-[#65718e] transition-colors hover:text-[#1c2a51] sm:block"
+            className="saved-button"
+            aria-label={`Saved places${savedCount ? ` (${savedCount})` : ""}`}
           >
-            Saved{savedCount > 0 ? ` (${savedCount})` : ""}
+            <Icon name="bookmark" size={18} filled={savedCount > 0} />
+            <span className="saved-label">{savedCount > 0 ? savedCount : "Saved"}</span>
           </button>
-          <a
-            href="/#discover"
-            className="whitespace-nowrap rounded-xl bg-[#5365d1] px-3 py-2.5 text-xs font-semibold text-white shadow-[0_6px_16px_rgba(83,101,209,0.22)] transition-all hover:bg-[#6173e4] active:scale-95 sm:px-4 sm:text-sm"
+          <button
+            type="button"
+            onClick={() => navigate("/auth")}
+            className="toolbar-cta"
           >
-            Get started
-          </a>
+            Get Started
+          </button>
         </div>
       </div>
     </motion.nav>
