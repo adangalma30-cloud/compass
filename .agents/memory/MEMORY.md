@@ -1,0 +1,1 @@
+- [Compass release branches](compass-release-branches.md) — Keep versioned Compass work isolated from `main` and release from the prior version branch.
