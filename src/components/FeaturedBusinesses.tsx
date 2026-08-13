@@ -4,7 +4,7 @@ import BusinessImage from "./BusinessImage";
 
 type FeaturedCardProps = Business & {
   isFavorite?: boolean;
-  onToggleFavorite?: (id: number) => void;
+  onToggleFavorite?: (id: string | number) => void;
 };
 
 function FeaturedCard({
@@ -82,8 +82,8 @@ function FeaturedCard({
 
 type FeaturedBusinessesProps = {
   businesses: Business[];
-  favoriteIds?: number[];
-  onToggleFavorite?: (id: number) => void;
+  favoriteIds?: Array<string | number>;
+  onToggleFavorite?: (id: string | number) => void;
 };
 
 function FeaturedBusinesses({

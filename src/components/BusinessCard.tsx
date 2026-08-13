@@ -8,7 +8,7 @@ type BusinessCardProps = Pick<
 > & {
   photo: Business["photo"];
   isFavorite?: boolean;
-  onToggleFavorite?: (id: number) => void;
+  onToggleFavorite?: (id: string | number) => void;
 };
 
 function BusinessCard({

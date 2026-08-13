@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth, useUser } from "@clerk/react";
 import Icon from "./Icon";
 
 type NavbarProps = {
@@ -15,6 +16,9 @@ function Navbar({
   onSavedClick,
 }: NavbarProps) {
   const navigate = useNavigate();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const displayName = user?.firstName || user?.username || "Profile";
   return (
     <motion.nav
       className="app-toolbar"
@@ -30,20 +34,36 @@ function Navbar({
         <div className="toolbar-actions">
           <button
             type="button"
-            onClick={onSavedClick}
+            onClick={() => (isSignedIn ? onSavedClick?.() : navigate("/sign-in"))}
             className="saved-button"
             aria-label={`Saved places${savedCount ? ` (${savedCount})` : ""}`}
           >
             <Icon name="bookmark" size={18} filled={savedCount > 0} />
             <span className="saved-label">{savedCount > 0 ? savedCount : "Saved"}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => navigate("/auth")}
-            className="toolbar-cta"
-          >
-            Get Started
-          </button>
+          {isLoaded && isSignedIn ? (
+            <button
+              type="button"
+              onClick={() => navigate("/profile")}
+              className="profile-button"
+              aria-label={`Open ${displayName}'s profile`}
+            >
+              {user?.imageUrl ? (
+                <img src={user.imageUrl} alt="" className="profile-avatar" />
+              ) : (
+                <span className="profile-avatar profile-avatar-fallback">{displayName.slice(0, 1).toUpperCase()}</span>
+              )}
+              <span className="profile-label">{displayName}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate("/sign-up")}
+              className="toolbar-cta"
+            >
+              Get Started
+            </button>
+          )}
         </div>
       </div>
     </motion.nav>

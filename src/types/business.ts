@@ -4,7 +4,7 @@ export type BusinessHours = {
 };
 
 export type Business = {
-  id: number;
+  id: string | number;
   name: string;
   description: string;
   rating: number;
@@ -13,7 +13,12 @@ export type Business = {
   category: string;
   tags: string[];
   icon: string;
-  photo: string;
+  photo?: string;
+  latitude?: number;
+  longitude?: number;
+  gallery?: string[];
+  source?: "preview" | "google_places";
+  externalId?: string;
   featured?: boolean;
   // Detail page fields
   aiSummary?: string;

@@ -1,43 +1,73 @@
 import { useCallback, useEffect, useState } from "react";
+import { api } from "../lib/api";
 
-const STORAGE_KEY = "compass-favorite-businesses";
-
-function readFavorites(): number[] {
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [];
-    const parsed: unknown = JSON.parse(saved);
-    return Array.isArray(parsed)
-      ? parsed.filter((value): value is number => typeof value === "number")
-      : [];
-  } catch {
-    return [];
-  }
+function normalizeId(id: string | number) {
+  return String(id);
 }
 
-export function useFavorites() {
-  const [favoriteIds, setFavoriteIds] = useState<number[]>(readFavorites);
+export function useFavorites(isSignedIn = false, isVerified = false) {
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [favoriteError, setFavoriteError] = useState("");
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(favoriteIds));
-    } catch {
-      // Favorites remain available in memory for the current session.
-    }
-  }, [favoriteIds]);
+    if (!isSignedIn || !isVerified) return;
+    let cancelled = false;
+    api
+      .getFavorites()
+      .then((ids) => {
+        if (!cancelled) setFavoriteIds(ids);
+      })
+      .catch(() => {
+        if (!cancelled) setFavoriteError("Saved places are temporarily unavailable.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, isVerified]);
 
-  const toggleFavorite = useCallback((id: number) => {
-    setFavoriteIds((current) =>
-      current.includes(id)
-        ? current.filter((favoriteId) => favoriteId !== id)
-        : [...current, id],
-    );
-  }, []);
+  const toggleFavorite = useCallback(
+    async (id: string | number) => {
+      if (!isSignedIn || !isVerified) {
+        setFavoriteError("Verify your email to save businesses.");
+        return;
+      }
+      const normalizedId = normalizeId(id);
+      const wasFavorite = favoriteIds.includes(normalizedId);
+      setFavoriteError("");
+      setFavoriteIds((current) =>
+        wasFavorite
+          ? current.filter((favoriteId) => favoriteId !== normalizedId)
+          : [...current, normalizedId],
+      );
+      try {
+        if (wasFavorite) {
+          await api.removeFavorite(normalizedId);
+        } else {
+          await api.addFavorite(normalizedId);
+        }
+      } catch {
+        setFavoriteIds((current) =>
+          wasFavorite
+            ? [...current, normalizedId]
+            : current.filter((favoriteId) => favoriteId !== normalizedId),
+        );
+        setFavoriteError("We couldn't update saved places. Try again.");
+      }
+    },
+    [favoriteIds, isSignedIn, isVerified],
+  );
 
   const isFavorite = useCallback(
-    (id: number) => favoriteIds.includes(id),
+    (id: string | number) => favoriteIds.includes(normalizeId(id)),
     [favoriteIds],
   );
 
-  return { favoriteIds, toggleFavorite, isFavorite };
+  const visibleFavoriteIds = isSignedIn && isVerified ? favoriteIds : [];
+
+  return {
+    favoriteIds: visibleFavoriteIds,
+    toggleFavorite,
+    isFavorite,
+    favoriteError,
+  };
 }

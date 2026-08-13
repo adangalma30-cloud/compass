@@ -12,9 +12,12 @@ type HeroProps = {
   search: string;
   onSearch: (value: string) => void;
   onScrollToResults: () => void;
+  onSearchRequest?: () => boolean;
+  onLocationRequest?: () => void;
+  locationLoading?: boolean;
 };
 
-function Hero({ search, onSearch, onScrollToResults }: HeroProps) {
+function Hero({ search, onSearch, onScrollToResults, onSearchRequest, onLocationRequest, locationLoading = false }: HeroProps) {
   function handlePromptClick(prompt: string) {
     onSearch(prompt);
     onScrollToResults();
@@ -22,6 +25,7 @@ function Hero({ search, onSearch, onScrollToResults }: HeroProps) {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (onSearchRequest && !onSearchRequest()) return;
     if (search.trim()) onScrollToResults();
   }
 
@@ -38,6 +42,12 @@ function Hero({ search, onSearch, onScrollToResults }: HeroProps) {
           <input type="text" value={search} onChange={(e) => onSearch(e.target.value)} placeholder="What are you looking for?" aria-label="Search for a place" />
           <button type="submit" aria-label="Search"><Icon name="arrow-right" size={19} /></button>
         </form>
+        {onLocationRequest && (
+          <button type="button" className="location-action" onClick={onLocationRequest} disabled={locationLoading}>
+            <Icon name="map-pin" size={15} />
+            {locationLoading ? "Finding nearby places…" : "Use my location"}
+          </button>
+        )}
         <div className="suggested-row" aria-label="Suggested searches">
           {SUGGESTED_PROMPTS.map((prompt) => (
             <button key={prompt} onClick={() => handlePromptClick(prompt)}>{prompt}</button>

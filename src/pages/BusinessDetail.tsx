@@ -1,11 +1,14 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/react";
+import type { Business } from "../types/business";
 import Navbar from "../components/Navbar";
 import BusinessCard from "../components/BusinessCard";
-import businesses from "../data/businesses";
 import { useFavorites } from "../hooks/useFavorites";
 import BusinessImage from "../components/BusinessImage";
 import Icon from "../components/Icon";
+import { api } from "../lib/api";
+import AuthPrompt from "../components/AuthPrompt";
 
 function NotFound() {
   return (
@@ -56,9 +59,40 @@ export default function BusinessDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [shareCopied, setShareCopied] = useState(false);
-  const { toggleFavorite, isFavorite } = useFavorites();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { toggleFavorite, isFavorite, favoriteError } = useFavorites(
+    Boolean(isSignedIn),
+    Boolean(user?.primaryEmailAddress?.verification?.status === "verified"),
+  );
+  const [authPrompt, setAuthPrompt] = useState(false);
+  const isVerified = user?.primaryEmailAddress?.verification?.status === "verified";
+  const [business, setBusiness] = useState<Business | undefined>();
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
-  const business = businesses.find((b) => b.id === Number(id));
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    api
+      .getBusiness(id)
+      .then((response) => {
+        if (!cancelled) {
+          setLoadError("");
+          setBusiness(response.business);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError("We couldn't load this business right now.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   useEffect(() => {
     if (!business) return;
     document.title = `${business.name} — Compass`;
@@ -66,6 +100,33 @@ export default function BusinessDetail() {
       document.title = "Compass — Find Local Businesses";
     };
   }, [business]);
+
+  if (loading) {
+    return (
+      <div className="detail-page">
+        <Navbar />
+        <main className="detail-main">
+          <div className="h-96 animate-pulse rounded-3xl bg-[#eef1f7]" aria-label="Loading business" />
+        </main>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="detail-page">
+        <Navbar />
+        <main className="detail-main">
+          <div className="rounded-2xl border border-[#f0d9dc] bg-[#fff8f8] px-6 py-12 text-center">
+            <p className="text-lg font-semibold text-[#6d3540]">{loadError}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 rounded-xl bg-[#5365d1] px-5 py-3 text-sm font-semibold text-white">
+              Try again
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!business) return <NotFound />;
 
@@ -90,9 +151,7 @@ export default function BusinessDetail() {
     }
   }
 
-  const related = businesses.filter(
-    (b) => b.category === business.category && b.id !== business.id
-  );
+  const related: Business[] = [];
 
   return (
     <div className="detail-page">
@@ -109,6 +168,18 @@ export default function BusinessDetail() {
         </button>
 
         {/* Hero card */}
+        {loading ? (
+          <div className="h-96 animate-pulse rounded-3xl bg-[#eef1f7]" />
+        ) : loadError ? (
+          <div className="rounded-2xl border border-[#f0d9dc] bg-[#fff8f8] px-6 py-12 text-center">
+            <p className="text-lg font-semibold text-[#6d3540]">{loadError}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 rounded-xl bg-[#5365d1] px-5 py-3 text-sm font-semibold text-white">
+              Try again
+            </button>
+          </div>
+        ) : !business ? (
+          <NotFound />
+        ) : (
         <div className="detail-hero-card">
           <BusinessImage
             src={business.photo}
@@ -145,7 +216,13 @@ export default function BusinessDetail() {
                <div className="detail-actions">
                 <button
                   type="button"
-                  onClick={() => toggleFavorite(business.id)}
+                   onClick={() => {
+                     if (!isSignedIn || !isVerified) {
+                       setAuthPrompt(true);
+                       return;
+                     }
+                     void toggleFavorite(business.id);
+                   }}
                    className={`detail-action ${isFavorite(business.id) ? "active" : ""} ${
                     isFavorite(business.id)
                       ? "border-[#5365d1] bg-[#5365d1] text-white"
@@ -165,13 +242,16 @@ export default function BusinessDetail() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Body grid */}
+        {!loading && business && !loadError && (
+        <>
          <div className="detail-grid">
           {/* Left: AI + About */}
            <div className="detail-column">
             {/* AI Recommends */}
-            {business.aiSummary && (
+             {business.aiSummary && (
                <div className="recommendation-card">
                  <div className="recommendation-label">
                    <Icon name="spark" size={15} />
@@ -195,7 +275,7 @@ export default function BusinessDetail() {
                <p>
                 {business.description}
               </p>
-            </div>
+           </div>
           </div>
 
           {/* Right: Business info */}
@@ -306,6 +386,16 @@ export default function BusinessDetail() {
               ))}
             </div>
           </div>
+        )}
+        {favoriteError && <p className="mt-4 text-center text-xs font-semibold text-[#c85a67]">{favoriteError}</p>}
+        {authPrompt && (
+          <AuthPrompt
+            title={isSignedIn ? "Verify your email first" : "Save your next place"}
+            message={isSignedIn ? "Email verification unlocks saved places and the full Compass experience." : "Create a free Compass account to save businesses and unlock personalized discovery."}
+            onDismiss={() => setAuthPrompt(false)}
+          />
+        )}
+        </>
         )}
       </main>
 

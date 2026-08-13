@@ -1,75 +1,41 @@
-# React + TypeScript + Vite
+# Compass 0.0.4
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Compass is a mobile-friendly local business discovery app with a persistent Clerk account, verified-email gated features, saved places, and a server-side discovery API.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run server:dev
+# in another terminal
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The Vite app proxies `/api` requests to the server on port `8787`. The server uses the Replit-provided `PORT` value when it is present.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Required configuration
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Authentication is handled by Clerk. Configure these environment secrets in the workspace:
 
+- `CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `VITE_CLERK_PUBLISHABLE_KEY`
+
+The API uses `DATABASE_URL` when a PostgreSQL database is attached. Without it, development falls back to the bundled preview listings so the guest experience remains usable.
+
+For live search, nearby discovery, and Google place photos, add the server-only secret:
+
+- `GOOGLE_PLACES_API_KEY`
+
+Never add the Google key to a `VITE_*` variable or ship it in the Android bundle. Live discovery is intentionally unavailable until that server secret is configured.
+
+## Validation and Android
+
+```bash
+npm run lint
+npm run build
+npm run typecheck:server
+npm run android:debug
 ```
+
+`android:debug` runs `cap sync`, sets the Android app version to `0.0.4` / version code `4`, and creates a debug-signed APK when the Android SDK is installed. The app requests coarse/fine location only when the user chooses nearby discovery.
