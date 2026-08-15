@@ -11,3 +11,15 @@ android/local.properties
 # TypeScript incremental build caches
 *.tsbuildinfo
 **/*.tsbuildinfo
+
+# Local environment configuration
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.swp
+Thumbs.db
