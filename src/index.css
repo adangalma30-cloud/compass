@@ -42,6 +42,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .toolbar-cta { min-height: 40px; padding: 0 14px; border: 0; border-radius: 12px; color: #fff; background: var(--indigo); box-shadow: 0 5px 13px rgba(83,101,209,.2); font-size: 12px; font-weight: 750; transition: transform .2s, background .2s; }
 .toolbar-cta:hover { background: #4356c0; }
 .toolbar-cta:active { transform: scale(.97); }
+/* Reserves the toolbar auth slot while the stored session is restored. */
+.toolbar-auth-placeholder { display: inline-block; width: 92px; height: 40px; border-radius: 999px; background: linear-gradient(90deg, #eef1f7, #f7f9fd, #eef1f7); }
 
 /* Hero */
 .hero { position: relative; overflow: hidden; color: #fff; background: var(--navy); }

@@ -1,9 +1,9 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useAuth, useUser } from "@clerk/react";
 import type { Business } from "../types/business";
 import Navbar from "../components/Navbar";
 import BusinessCard from "../components/BusinessCard";
+import { useAuthState } from "../lib/authState";
 import { useFavorites } from "../hooks/useFavorites";
 import BusinessImage from "../components/BusinessImage";
 import Icon from "../components/Icon";
@@ -59,14 +59,10 @@ export default function BusinessDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [shareCopied, setShareCopied] = useState(false);
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-  const { toggleFavorite, isFavorite, favoriteError } = useFavorites(
-    Boolean(isSignedIn),
-    Boolean(user?.primaryEmailAddress?.verification?.status === "verified"),
-  );
+  // Shared auth state keeps this screen in step with Home and the navbar.
+  const { isSignedIn, isVerified } = useAuthState();
+  const { toggleFavorite, isFavorite, favoriteError } = useFavorites(isSignedIn, isVerified);
   const [authPrompt, setAuthPrompt] = useState(false);
-  const isVerified = user?.primaryEmailAddress?.verification?.status === "verified";
   const [business, setBusiness] = useState<Business | undefined>();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");

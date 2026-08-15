@@ -22,6 +22,10 @@ export function useFavorites(isSignedIn = false, isVerified = false) {
       });
     return () => {
       cancelled = true;
+      // Dropping the cached list when the session ends prevents one account's
+      // saved places from being shown to the next user of the device.
+      setFavoriteIds([]);
+      setFavoriteError("");
     };
   }, [isSignedIn, isVerified]);
 

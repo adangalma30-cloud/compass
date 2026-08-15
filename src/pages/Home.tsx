@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useAuth, useUser } from "@clerk/react";
 import { Geolocation } from "@capacitor/geolocation";
 
 import Navbar from "../components/Navbar";
@@ -14,6 +13,7 @@ import { useFavorites } from "../hooks/useFavorites";
 import businesses from "../data/businesses";
 import { api } from "../lib/api";
 import AuthPrompt from "../components/AuthPrompt";
+import { useAuthState } from "../lib/authState";
 
 // ─── Animation helpers ────────────────────────────────────
 
@@ -46,8 +46,8 @@ type HomeProps = {
 };
 
 function Home({ pageReady = true }: HomeProps) {
-  const { isLoaded: authLoaded, isSignedIn } = useAuth();
-  const { user } = useUser();
+  // Shared auth state: the same source the navbar and profile read.
+  const { isLoaded: authLoaded, isSignedIn, isVerified } = useAuthState();
   const [search, setSearch]                     = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedCity, setSelectedCity]         = useState("All cities");
@@ -59,10 +59,9 @@ function Home({ pageReady = true }: HomeProps) {
   const [loadingBusinesses, setLoadingBusinesses] = useState(true);
   const [businessError, setBusinessError] = useState("");
   const { favoriteIds, toggleFavorite, isFavorite, favoriteError } = useFavorites(
-    Boolean(isSignedIn),
-    Boolean(user?.primaryEmailAddress?.verification?.status === "verified"),
+    isSignedIn,
+    isVerified,
   );
-  const isVerified = user?.primaryEmailAddress?.verification?.status === "verified";
   const [authPrompt, setAuthPrompt] = useState<"save" | "search" | "location" | "verify" | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, useUser } from "@clerk/react";
 import Icon from "./Icon";
+import { useAuthState } from "../lib/authState";
 
 type NavbarProps = {
   /** When true the navbar slides down into view. Default true. */
@@ -16,9 +16,10 @@ function Navbar({
   onSavedClick,
 }: NavbarProps) {
   const navigate = useNavigate();
-  const { isLoaded, isSignedIn } = useAuth();
-  const { user } = useUser();
-  const displayName = user?.firstName || user?.username || "Profile";
+  // One shared auth state drives the toolbar, so "Get Started" swaps to the
+  // profile button the moment the session is established - no reload needed.
+  const { isLoaded, isSignedIn, user } = useAuthState();
+  const displayName = user?.name || "Profile";
   return (
     <motion.nav
       className="app-toolbar"
@@ -41,7 +42,11 @@ function Navbar({
             <Icon name="bookmark" size={18} filled={savedCount > 0} />
             <span className="saved-label">{savedCount > 0 ? savedCount : "Saved"}</span>
           </button>
-          {isLoaded && isSignedIn ? (
+          {!isLoaded ? (
+            /* Placeholder while the stored session is restored, so an already
+               signed-in user never sees "Get Started" flash on launch. */
+            <span className="toolbar-auth-placeholder" aria-hidden="true" />
+          ) : isSignedIn ? (
             <button
               type="button"
               onClick={() => navigate("/profile")}
@@ -49,7 +54,7 @@ function Navbar({
               aria-label={`Open ${displayName}'s profile`}
             >
               {user?.imageUrl ? (
-                <img src={user.imageUrl} alt="" className="profile-avatar" />
+                <img src={user.imageUrl} alt="" className="profile-avatar" referrerPolicy="no-referrer" />
               ) : (
                 <span className="profile-avatar profile-avatar-fallback">{displayName.slice(0, 1).toUpperCase()}</span>
               )}

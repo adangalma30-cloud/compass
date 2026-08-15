@@ -6,6 +6,8 @@ import BusinessDetail from "./pages/BusinessDetail";
 import Auth, { AuthRedirect } from "./pages/Auth";
 import Profile from "./pages/Profile";
 import SplashScreen from "./components/SplashScreen";
+import ApiTokenBridge from "./components/ApiTokenBridge";
+import RequireAuth from "./components/RequireAuth";
 import { basePath, clerkPubKey, clerkProxyUrl } from "./lib/clerk";
 
 // Show splash once per browser session.
@@ -45,6 +47,9 @@ function App() {
       proxyUrl={clerkProxyUrl}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
+      // Returning to the guest home after sign-out keeps the Android back
+      // stack correct instead of leaving the user on a dead profile route.
+      afterSignOutUrl={basePath || "/"}
       appearance={{
         options: {
           logoPlacement: "inside",
@@ -70,6 +75,7 @@ function App() {
       }}
     >
       <>
+        <ApiTokenBridge />
         {!splashDone && <SplashScreen onComplete={handleSplashComplete} />}
         <BrowserRouter>
           <Routes>
@@ -77,7 +83,14 @@ function App() {
             <Route path="/sign-in/*" element={<Auth mode="signin" />} />
             <Route path="/sign-up/*" element={<Auth mode="signup" />} />
             <Route path="/auth" element={<AuthRedirect />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth>
+                  <Profile />
+                </RequireAuth>
+              }
+            />
             <Route path="/business/:id" element={<BusinessDetail />} />
           </Routes>
         </BrowserRouter>

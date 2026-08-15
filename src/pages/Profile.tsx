@@ -1,23 +1,56 @@
-import { useClerk, useUser } from "@clerk/react";
+import { useClerk } from "@clerk/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import BusinessCard from "../components/BusinessCard";
 import Icon from "../components/Icon";
-import { api } from "../lib/api";
+import { ApiError, api } from "../lib/api";
+import { useAuthState } from "../lib/authState";
 import type { Business } from "../types/business";
 
+/** Shape returned by the authenticated /api/me endpoint. */
+type AccountDetails = {
+  id: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+  emailVerified: boolean;
+};
+
 export default function Profile() {
-  const { user, isLoaded } = useUser();
+  // Route access is enforced by RequireAuth; this reads the shared auth state.
+  const { isLoaded, isSignedIn, isVerified, user } = useAuthState();
   const { signOut } = useClerk();
   const navigate = useNavigate();
   const [savedBusinesses, setSavedBusinesses] = useState<Business[]>([]);
+  // The authenticated account as the server sees it. Never hardcoded.
+  const [account, setAccount] = useState<AccountDetails | undefined>();
   const [name, setName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Load the signed-in account from the backend, which resolves the user from
+  // the verified session token - never from a client-supplied id.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    let cancelled = false;
+    api
+      .getMe()
+      .then((response) => {
+        if (!cancelled) setAccount(response.user);
+      })
+      .catch(() => {
+        if (!cancelled) setErrorMessage("We couldn't load your account details.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isSignedIn || !isVerified) return;
     let cancelled = false;
     api
       .getFavorites()
@@ -34,32 +67,54 @@ export default function Profile() {
         if (!cancelled) setSavedBusinesses(businesses.filter((business): business is Business => Boolean(business)));
       })
       .catch(() => {
-        if (!cancelled) setMessage("Saved places are temporarily unavailable.");
+        if (!cancelled) setErrorMessage("Saved places are temporarily unavailable.");
       });
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [isSignedIn, isVerified]);
 
   if (!isLoaded) {
     return <div className="min-h-screen animate-pulse bg-[#eef1f7]" />;
   }
-  if (!user) {
-    navigate("/sign-in", { replace: true });
+  if (!isSignedIn || !user) {
     return null;
   }
-  const currentUser = user;
+
+  // Prefer the server's copy of the account, falling back to the session user
+  // while the request is in flight.
+  const displayName = account?.name || user.name;
+  const displayEmail = account?.email || user.email;
+  const displayImage = account?.profileImage || user.imageUrl;
+  const emailVerified = account?.emailVerified ?? user.emailVerified;
+
+  async function handleSignOut() {
+    setSigningOut(true);
+    try {
+      // Clears the stored session so reopening the app returns a guest home.
+      await signOut();
+      navigate("/", { replace: true });
+    } catch {
+      setSigningOut(false);
+      setErrorMessage("We couldn't sign you out. Please try again.");
+    }
+  }
 
   async function saveName() {
     setSavingName(true);
     setMessage("");
+    setErrorMessage("");
     try {
       const response = await api.updateMe(name);
-      await currentUser.update({ firstName: response.user.name });
+      setAccount(response.user);
       setEditingName(false);
       setMessage("Profile updated.");
-    } catch {
-      setMessage("We couldn't update your profile.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiError && error.isVerificationError
+          ? "Verify your email before updating your profile."
+          : "We couldn't update your profile.",
+      );
     } finally {
       setSavingName(false);
     }
@@ -76,11 +131,15 @@ export default function Profile() {
       </header>
       <main className="profile-main">
         <section className="profile-hero">
-          {user.imageUrl ? <img src={user.imageUrl} alt="" className="profile-large-avatar" /> : <span className="profile-large-avatar profile-avatar-fallback">{(user.firstName?.[0] ?? "C").toUpperCase()}</span>}
+          {displayImage ? (
+            <img src={displayImage} alt="" className="profile-large-avatar" referrerPolicy="no-referrer" />
+          ) : (
+            <span className="profile-large-avatar profile-avatar-fallback">{(displayName[0] ?? "C").toUpperCase()}</span>
+          )}
           <div>
             <p className="profile-kicker">Your Compass</p>
-            <h1>{user.firstName || user.username || "Compass member"}</h1>
-            <p>{user.primaryEmailAddress?.emailAddress}</p>
+            <h1>{displayName}</h1>
+            <p>{displayEmail}</p>
           </div>
         </section>
 
@@ -92,7 +151,7 @@ export default function Profile() {
             </div>
             <span className="verification-pill">
               <span className="verification-dot" />
-              {user.primaryEmailAddress?.verification?.status === "verified" ? "Email verified" : "Verify your email"}
+              {emailVerified ? "Email verified" : "Verify your email"}
             </span>
           </div>
           <div className="profile-detail-row">
@@ -105,15 +164,16 @@ export default function Profile() {
               </div>
             ) : (
               <button type="button" className="profile-edit-link" onClick={() => {
-                setName(user.firstName || user.username || "");
+                setName(displayName);
                 setEditingName(true);
               }}>
-                {user.firstName || user.username || "Add your name"} <Icon name="arrow-right" size={14} />
+                {displayName || "Add your name"} <Icon name="arrow-right" size={14} />
               </button>
             )}
           </div>
-          <div className="profile-detail-row"><span>Email</span><strong>{user.primaryEmailAddress?.emailAddress}</strong></div>
+          <div className="profile-detail-row"><span>Email</span><strong>{displayEmail}</strong></div>
           {message && <p className="form-message success">{message}</p>}
+          {errorMessage && <p className="form-message error">{errorMessage}</p>}
         </section>
 
         <section className="profile-panel">
@@ -151,8 +211,8 @@ export default function Profile() {
           )}
         </section>
 
-        <button type="button" className="profile-signout" onClick={() => signOut({ redirectUrl: "/" })}>
-          Sign out
+        <button type="button" className="profile-signout" onClick={handleSignOut} disabled={signingOut}>
+          {signingOut ? "Signing out…" : "Sign out"}
         </button>
       </main>
     </div>

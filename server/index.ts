@@ -8,7 +8,17 @@ import router from "./routes";
 const app = express();
 const port = Number(process.env.PORT ?? 8787);
 
-app.use(cors({ origin: true, credentials: true }));
+// The Android build issues requests from the local WebView origin
+// (capacitor://localhost / http://localhost) and authenticates with a bearer
+// token rather than a cookie, so the Authorization header must be allowed.
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  }),
+);
 app.use(express.json({ limit: "1mb" }));
 app.use(clerkMiddleware());
 app.use("/api", router);
