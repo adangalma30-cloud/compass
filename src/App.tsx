@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import BusinessDetail from "./pages/BusinessDetail";
 import Auth, { AuthRedirect } from "./pages/Auth";
 import Profile from "./pages/Profile";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import SplashScreen from "./components/SplashScreen";
 import ApiTokenBridge from "./components/ApiTokenBridge";
 import RequireAuth from "./components/RequireAuth";
@@ -83,6 +84,7 @@ function App() {
             <Route path="/sign-in/*" element={<Auth mode="signin" />} />
             <Route path="/sign-up/*" element={<Auth mode="signup" />} />
             <Route path="/auth" element={<AuthRedirect />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route
               path="/profile"
               element={

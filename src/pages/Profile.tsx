@@ -149,10 +149,19 @@ export default function Profile() {
               <p className="profile-kicker">Account</p>
               <h2>Account details</h2>
             </div>
-            <span className="verification-pill">
-              <span className="verification-dot" />
-              {emailVerified ? "Email verified" : "Verify your email"}
-            </span>
+            {emailVerified ? (
+              <span className="verification-pill">
+                <span className="verification-dot" />
+                Email verified
+              </span>
+            ) : (
+              /* Unverified is visually distinct and links to the OTP screen so
+                 the state is never mistaken for verified. */
+              <Link to="/verify-email" className="verification-pill verification-pill-pending">
+                <span className="verification-dot" />
+                Verify your email
+              </Link>
+            )}
           </div>
           <div className="profile-detail-row">
             <span>Name</span>

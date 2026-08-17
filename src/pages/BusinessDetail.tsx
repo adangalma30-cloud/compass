@@ -386,6 +386,7 @@ export default function BusinessDetail() {
         {favoriteError && <p className="mt-4 text-center text-xs font-semibold text-[#c85a67]">{favoriteError}</p>}
         {authPrompt && (
           <AuthPrompt
+            needsVerification={Boolean(isSignedIn)}
             title={isSignedIn ? "Verify your email first" : "Save your next place"}
             message={isSignedIn ? "Email verification unlocks saved places and the full Compass experience." : "Create a free Compass account to save businesses and unlock personalized discovery."}
             onDismiss={() => setAuthPrompt(false)}

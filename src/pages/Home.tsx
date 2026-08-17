@@ -292,6 +292,7 @@ function Home({ pageReady = true }: HomeProps) {
                   ? "A verified account unlocks saved places, live search, and location-aware discovery."
                   : "Create a free Compass account to unlock this feature."
               }
+              needsVerification={authPrompt === "verify"}
               onDismiss={() => setAuthPrompt(null)}
             />
           )}

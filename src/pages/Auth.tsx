@@ -1,7 +1,8 @@
-import { SignIn, SignUp } from "@clerk/react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
-import { appPath, basePath } from "../lib/clerk";
+import SignInForm from "../components/SignInForm";
+import SignUpForm from "../components/SignUpForm";
+import { appPath } from "../lib/clerk";
 import { useAuthState } from "../lib/authState";
 
 type AuthProps = {
@@ -11,16 +12,20 @@ type AuthProps = {
 export default function Auth({ mode }: AuthProps) {
   const signInPath = appPath("/sign-in");
   const signUpPath = appPath("/sign-up");
-  const homePath = basePath || "/";
-  const { isLoaded, isSignedIn } = useAuthState();
+  const { isLoaded, isSignedIn, isVerified } = useAuthState();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Once the session is established, leave the auth screen immediately. This
-  // is what makes a successful sign-in land on Home instead of sitting on the
-  // form: Clerk updates the shared auth state, and this redirect reacts to it.
+  // Once a session exists, leave the auth screen. An unverified account is
+  // routed to verification rather than into the app.
   if (isLoaded && isSignedIn) {
+    if (!isVerified) return <Navigate to="/verify-email" replace />;
     const from = (location.state as { from?: string } | null)?.from;
     return <Navigate to={from && from !== "/sign-in" && from !== "/sign-up" ? from : "/"} replace />;
+  }
+
+  function handleComplete() {
+    navigate("/", { replace: true });
   }
 
   return (
@@ -34,25 +39,9 @@ export default function Auth({ mode }: AuthProps) {
         </Link>
         <div className="auth-clerk-shell">
           {mode === "signin" ? (
-            <SignIn
-              routing="path"
-              path={signInPath}
-              signUpUrl={signUpPath}
-              // Send the user to Home as soon as the credentials are accepted.
-              forceRedirectUrl={homePath}
-              fallbackRedirectUrl={homePath}
-            />
+            <SignInForm onComplete={handleComplete} signUpPath={signUpPath} />
           ) : (
-            <SignUp
-              routing="path"
-              path={signUpPath}
-              signInUrl={signInPath}
-              // A new account signs straight in, so it lands on Home too.
-              forceRedirectUrl={homePath}
-              fallbackRedirectUrl={homePath}
-              // Keep the user in the app while they confirm their email.
-              signInFallbackRedirectUrl={homePath}
-            />
+            <SignUpForm onComplete={handleComplete} signInPath={signInPath} />
           )}
         </div>
         <Link to="/" className="auth-back"><Icon name="arrow-left" size={16} /> Back to exploring</Link>

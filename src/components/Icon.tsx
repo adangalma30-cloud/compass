@@ -6,6 +6,7 @@ type IconName =
   | "chevron-down"
   | "compass"
   | "heart"
+  | "mail"
   | "map-pin"
   | "menu"
   | "phone"
@@ -64,6 +65,8 @@ export default function Icon({
       return <svg {...common}><path d="m6 9 6 6 6-6" /></svg>;
     case "heart":
       return <svg {...common} fill={filled ? "currentColor" : "none"}><path d="M20.8 8.8c0 5.3-8.8 10-8.8 10s-8.8-4.7-8.8-10A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.6Z" /></svg>;
+    case "mail":
+      return <svg {...common}><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3.5 7.5 7.4 5.2a2 2 0 0 0 2.2 0l7.4-5.2" /></svg>;
     case "map-pin":
       return <svg {...common}><path d="M20 10.5c0 5-8 10-8 10s-8-5-8-10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10.5" r="2.4" /></svg>;
     case "menu":
