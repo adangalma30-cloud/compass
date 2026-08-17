@@ -6,6 +6,7 @@ import { useSignUp } from "@clerk/react/legacy";
 import { Link } from "react-router-dom";
 import VerifyEmail from "./VerifyEmail";
 import { friendlyAuthError, validateCredentials, type FieldName } from "../lib/authErrors";
+import { usePasswordPolicy } from "../lib/passwordPolicy";
 
 type SignUpFormProps = {
   /** Called once the session is active and the email is verified. */
@@ -27,6 +28,9 @@ type SignUpFormProps = {
  */
 export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) {
   const { isLoaded, signUp, setActive } = useSignUp();
+  // Requirements come from the Clerk instance so the form can never disagree
+  // with what the server will accept.
+  const passwordPolicy = usePasswordPolicy();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -39,7 +43,7 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
     event.preventDefault();
     if (!isLoaded || submitting) return;
 
-    const invalid = validateCredentials(email, password);
+    const invalid = validateCredentials(email, password, passwordPolicy.minLength);
     if (invalid) {
       setError(invalid.message);
       setErrorField(invalid.field);
@@ -153,6 +157,7 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
             disabled={submitting}
             required
           />
+          {passwordPolicy.hint && <small className="auth-hint">{passwordPolicy.hint}</small>}
         </label>
 
         {error && <p className="form-message error" role="alert">{error}</p>}

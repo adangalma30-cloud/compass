@@ -65,7 +65,6 @@ const MESSAGES: Record<string, string> = {
   // Sign up
   form_identifier_exists: "An account with that email already exists. Try signing in instead.",
   form_password_pwned: "That password has appeared in a data breach. Please choose a different one.",
-  form_password_length_too_short: "Use a password with at least 8 characters.",
   form_password_validation_failed: "That password doesn't meet the requirements.",
   // Shared validation
   form_param_format_invalid: "Enter a valid email address.",
@@ -113,15 +112,29 @@ export function friendlyAuthError(error: unknown, fallback?: string): AuthErrorR
   return { message: fallback ?? "Something went wrong. Please try again.", field: "form" };
 }
 
-/** Client-side validation so obvious mistakes never hit the network. */
-export function validateCredentials(email: string, password: string): AuthErrorResult | undefined {
+/**
+ * Client-side validation so obvious mistakes never hit the network.
+ *
+ * `minPasswordLength` comes from the Clerk instance at runtime rather than
+ * being hardcoded: the requirement is configurable in the Clerk Dashboard, and
+ * a stale local copy rejects passwords that Clerk would actually accept.
+ * Passing `undefined` skips the length check and lets Clerk be the authority.
+ */
+export function validateCredentials(
+  email: string,
+  password: string,
+  minPasswordLength?: number,
+): AuthErrorResult | undefined {
   if (!email.trim()) return { message: "Enter your email address.", field: "identifier" };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     return { message: "Enter a valid email address.", field: "identifier" };
   }
   if (!password) return { message: "Enter your password.", field: "password" };
-  if (password.length < 8) {
-    return { message: "Use a password with at least 8 characters.", field: "password" };
+  if (minPasswordLength && password.length < minPasswordLength) {
+    return {
+      message: `Use a password with at least ${minPasswordLength} characters.`,
+      field: "password",
+    };
   }
   return undefined;
 }
