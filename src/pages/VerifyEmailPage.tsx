@@ -20,6 +20,7 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const [preparing, setPreparing] = useState(true);
   const [prepareError, setPrepareError] = useState("");
+  const [codeExpiresAt, setCodeExpiresAt] = useState<Date | undefined>();
 
   const emailAddress = clerkUser?.primaryEmailAddress;
 
@@ -30,6 +31,9 @@ export default function VerifyEmailPage() {
     let cancelled = false;
     emailAddress
       .prepareVerification({ strategy: "email_code" })
+      .then((result) => {
+        if (!cancelled) setCodeExpiresAt(result?.verification?.expireAt ?? undefined);
+      })
       .catch(() => {
         if (!cancelled) setPrepareError("We couldn't send a code. Try resending below.");
       })
@@ -58,7 +62,10 @@ export default function VerifyEmailPage() {
   async function handleResend() {
     if (!emailAddress) throw new Error("no-email");
     setPrepareError("");
-    await emailAddress.prepareVerification({ strategy: "email_code" });
+    const result = await emailAddress.prepareVerification({ strategy: "email_code" });
+    const next = result?.verification?.expireAt ?? undefined;
+    setCodeExpiresAt(next);
+    return next;
   }
 
   return (
@@ -81,6 +88,7 @@ export default function VerifyEmailPage() {
                 onVerify={handleVerify}
                 onResend={handleResend}
                 onCancel={() => navigate("/", { replace: true })}
+                expiresAt={codeExpiresAt}
               />
             </>
           )}

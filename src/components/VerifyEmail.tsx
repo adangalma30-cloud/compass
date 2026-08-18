@@ -10,11 +10,24 @@ type VerifyEmailProps = {
   email: string;
   /** Submits the OTP to Clerk. Rejects when the code is wrong or expired. */
   onVerify: (code: string) => Promise<void>;
-  /** Asks Clerk to send a fresh code. */
-  onResend: () => Promise<void>;
+  /**
+   * Asks Clerk to send a fresh code. Resolves with the new expiry when Clerk
+   * reports one, so the countdown tracks the real code rather than a guess.
+   */
+  onResend: () => Promise<Date | undefined>;
   /** Abandons the attempt and returns to the form. */
   onCancel: () => void;
+  /** When the current code stops being valid, as reported by Clerk. */
+  expiresAt?: Date;
 };
+
+/** Formats remaining milliseconds as m:ss. */
+function formatRemaining(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
 
 /**
  * One-time passcode screen for email verification.
@@ -22,20 +35,36 @@ type VerifyEmailProps = {
  * This owns only the UI and input handling. Every code is validated by Clerk;
  * nothing here decides whether an address is verified.
  */
-export default function VerifyEmail({ email, onVerify, onResend, onCancel }: VerifyEmailProps) {
+export default function VerifyEmail({ email, onVerify, onResend, onCancel, expiresAt }: VerifyEmailProps) {
   const [digits, setDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(""));
   const [status, setStatus] = useState<"idle" | "verifying" | "resending" | "verified">("idle");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+  // Set by a resend so the countdown can outlive the original prop value.
+  const [resentExpiry, setResentExpiry] = useState<Date | undefined>();
+  // A ticking clock. Remaining time is derived from it rather than mirrored
+  // into state, so there is one source of truth for the deadline.
+  const [now, setNow] = useState(() => Date.now());
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   const code = digits.join("");
   const busy = status === "verifying" || status === "resending";
+  const expiry = resentExpiry ?? expiresAt;
+  const remainingMs = expiry ? expiry.getTime() - now : undefined;
+  const expired = remainingMs !== undefined && remainingMs <= 0;
 
   useEffect(() => {
     inputsRef.current[0]?.focus();
   }, []);
+
+  // Advances the clock once a second so the countdown re-renders. Stops once
+  // the code has expired; there is nothing further to count.
+  useEffect(() => {
+    if (!expiry || expired) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [expiry, expired]);
 
   // Cooldown stops users hammering the resend button into a rate limit.
   useEffect(() => {
@@ -46,6 +75,10 @@ export default function VerifyEmail({ email, onVerify, onResend, onCancel }: Ver
 
   async function submit(fullCode: string) {
     if (fullCode.length !== CODE_LENGTH || busy) return;
+    if (expired) {
+      setError("That code has expired. Request a new one.");
+      return;
+    }
     setStatus("verifying");
     setError("");
     setNotice("");
@@ -95,12 +128,16 @@ export default function VerifyEmail({ email, onVerify, onResend, onCancel }: Ver
   }
 
   async function resend() {
-    if (cooldown > 0 || busy) return;
+    // Mirrors the button's disabled rule exactly. An expired code bypasses the
+    // cooldown, otherwise an enabled button would silently do nothing.
+    if ((cooldown > 0 && !expired) || busy) return;
     setStatus("resending");
     setError("");
     setNotice("");
     try {
-      await onResend();
+      const nextExpiry = await onResend();
+      setResentExpiry(nextExpiry);
+      setNow(Date.now());
       setNotice(`We sent a new code to ${email}.`);
       setCooldown(RESEND_COOLDOWN_SECONDS);
       setDigits(Array(CODE_LENGTH).fill(""));
@@ -144,10 +181,22 @@ export default function VerifyEmail({ email, onVerify, onResend, onCancel }: Ver
               autoComplete={index === 0 ? "one-time-code" : "off"}
               maxLength={CODE_LENGTH}
               aria-label={`Digit ${index + 1}`}
-              disabled={busy || status === "verified"}
+              disabled={busy || status === "verified" || expired}
             />
           ))}
         </div>
+
+        {remainingMs !== undefined && status !== "verified" && (
+          expired ? (
+            <p className="otp-expiry otp-expiry-done" role="status">
+              This code has expired. Request a new one below.
+            </p>
+          ) : (
+            <p className={`otp-expiry${remainingMs <= 60_000 ? " otp-expiry-soon" : ""}`} role="status">
+              Code expires in {formatRemaining(remainingMs)}
+            </p>
+          )
+        )}
 
         {error && <p className="form-message error" role="alert">{error}</p>}
         {notice && !error && <p className="form-message success">{notice}</p>}
@@ -156,17 +205,23 @@ export default function VerifyEmail({ email, onVerify, onResend, onCancel }: Ver
         <button
           type="submit"
           className="otp-submit"
-          disabled={code.length !== CODE_LENGTH || busy || status === "verified"}
+          disabled={code.length !== CODE_LENGTH || busy || status === "verified" || expired}
         >
           {status === "verifying" ? "Verifying…" : status === "verified" ? "Verified" : "Verify"}
         </button>
       </form>
 
       <div className="otp-actions">
-        <button type="button" onClick={resend} disabled={cooldown > 0 || busy || status === "verified"}>
+        <button
+          type="button"
+          onClick={resend}
+          /* An expired code is useless, so the cooldown is bypassed to avoid
+             stranding the user until it elapses. */
+          disabled={(cooldown > 0 && !expired) || busy || status === "verified"}
+        >
           {status === "resending"
             ? "Sending…"
-            : cooldown > 0
+            : cooldown > 0 && !expired
               ? `Resend code in ${cooldown}s`
               : "Resend code"}
         </button>

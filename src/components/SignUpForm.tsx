@@ -35,6 +35,8 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [pendingVerification, setPendingVerification] = useState(false);
+  // Real deadline for the emailed code, reported by Clerk.
+  const [codeExpiresAt, setCodeExpiresAt] = useState<Date | undefined>();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<FieldName>("form");
@@ -60,7 +62,8 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
       });
 
       // Ask Clerk to email the one-time code.
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      const prepared = await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setCodeExpiresAt(prepared.verifications?.emailAddress?.expireAt ?? undefined);
       setPendingVerification(true);
     } catch (caught) {
       const result = friendlyAuthError(caught, "We couldn't create your account. Please try again.");
@@ -86,7 +89,10 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
 
   async function handleResend() {
     if (!isLoaded) throw new Error("not-ready");
-    await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+    const prepared = await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+    const next = prepared.verifications?.emailAddress?.expireAt ?? undefined;
+    setCodeExpiresAt(next);
+    return next;
   }
 
   function handleCancel() {
@@ -106,6 +112,7 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
         onVerify={handleVerify}
         onResend={handleResend}
         onCancel={handleCancel}
+        expiresAt={codeExpiresAt}
       />
     );
   }

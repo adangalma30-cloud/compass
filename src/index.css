@@ -323,6 +323,10 @@ footer { padding: 26px 16px; border-top: 1px solid #e7ebf3; color: #8995ab; back
 .otp-input { width: 100%; height: 52px; padding: 0; border: 1px solid #dfe4f0; border-radius: 12px; background: #f7f8fc; color: var(--ink); font-size: 20px; font-weight: 800; text-align: center; transition: border-color .18s, box-shadow .18s; }
 .otp-input:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(83,101,209,.12); background: #fff; }
 .otp-input-error { border-color: #c85a67; }
+/* Expiry countdown for the current code. */
+.otp-expiry { margin: 0; color: var(--muted); font-size: 11.5px; font-weight: 700; }
+.otp-expiry-soon { color: #b8792f; }
+.otp-expiry-done { color: #c85a67; }
 .otp-input:disabled { opacity: .6; }
 
 .otp-actions { display: grid; gap: 9px; margin-top: 16px; }
