@@ -99,6 +99,15 @@ if (isPlaceholder(env.VITE_CLERK_PUBLISHABLE_KEY)) {
   ok("Clerk publishable key present");
 }
 
+// The API server needs the publishable key too; without it Clerk's middleware
+// throws on every request and the whole API returns 500.
+if (env.CLERK_SECRET_KEY && !isPlaceholder(env.CLERK_SECRET_KEY) && isPlaceholder(env.CLERK_PUBLISHABLE_KEY)) {
+  warn(
+    "CLERK_PUBLISHABLE_KEY is not set for the API server.",
+    "Clerk's Express middleware needs it alongside CLERK_SECRET_KEY, or every API request fails. Use the same pk_ value as VITE_CLERK_PUBLISHABLE_KEY.",
+  );
+}
+
 if (isPlaceholder(env.CLERK_SECRET_KEY)) {
   warn(
     "CLERK_SECRET_KEY is missing (needed by the API server to verify sign-ins).",

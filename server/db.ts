@@ -161,6 +161,22 @@ function applyBusinessFilters(
     .slice(0, params.limit ?? 50);
 }
 
+/** Confirms the database is actually reachable, not merely configured. */
+export async function databaseReachable(): Promise<boolean> {
+  if (!pool) return false;
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query("SELECT 1");
+      return true;
+    } finally {
+      client.release();
+    }
+  } catch {
+    return false;
+  }
+}
+
 export async function initDatabase() {
   if (!pool) return false;
   const client = await pool.connect();

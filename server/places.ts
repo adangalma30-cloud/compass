@@ -26,8 +26,17 @@ function categoryFromTypes(types: string[] = []) {
   return "Local business";
 }
 
+/**
+ * Builds the URL the client uses to load a place photo.
+ *
+ * The Android WebView runs on its own origin, so a relative path resolves
+ * against the app bundle and the image silently fails. PUBLIC_API_URL makes
+ * the URL absolute for deployed environments; it stays relative in local
+ * development where Vite proxies /api.
+ */
 function photoProxyUrl(photoReference: string) {
-  return `/api/place-photo?reference=${encodeURIComponent(photoReference)}`;
+  const base = (process.env.PUBLIC_API_URL ?? "").replace(/\/$/, "");
+  return `${base}/api/place-photo?reference=${encodeURIComponent(photoReference)}`;
 }
 
 function placeToBusiness(place: GooglePlace): ApiBusiness {

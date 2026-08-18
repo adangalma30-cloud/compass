@@ -11,7 +11,7 @@ import CategoryFilter from "../components/CategoryFilter";
 import BusinessCard from "../components/BusinessCard";
 import { useFavorites } from "../hooks/useFavorites";
 import businesses from "../data/businesses";
-import { api } from "../lib/api";
+import { ApiError, api } from "../lib/api";
 import AuthPrompt from "../components/AuthPrompt";
 import { useAuthState } from "../lib/authState";
 
@@ -97,8 +97,15 @@ function Home({ pageReady = true }: HomeProps) {
         setDataSource(response.source);
         setLiveDiscoveryConfigured(response.liveDiscoveryConfigured);
       })
-      .catch(() => {
-        if (!cancelled) setBusinessError("We couldn't load Compass right now.");
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        // Distinguish "you are offline" from "the API is down", so the user
+        // knows whether retrying will help.
+        setBusinessError(
+          error instanceof ApiError && error.code === "network_error"
+            ? "We couldn't reach Compass. Check your connection and try again."
+            : "We couldn't load Compass right now.",
+        );
       })
       .finally(() => {
         if (!cancelled) setLoadingBusinesses(false);
@@ -242,14 +249,17 @@ function Home({ pageReady = true }: HomeProps) {
         />
       </motion.div>
 
-      {/* Featured businesses */}
-      <motion.div {...fadeUp(0.3)} animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}>
+      {/* Featured businesses. Hidden while the API is unreachable so bundled
+          placeholder listings are never presented as live results. */}
+      {!businessError && (
+        <motion.div {...fadeUp(0.3)} animate={pageReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}>
           <FeaturedBusinesses
-          businesses={businessesFromApi}
-          favoriteIds={favoriteIds}
-          onToggleFavorite={handleFavorite}
-        />
-      </motion.div>
+            businesses={businessesFromApi}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={handleFavorite}
+          />
+        </motion.div>
+      )}
 
       {/* Browse / results section */}
       <section id="discover" ref={resultsRef} className="mx-auto max-w-6xl scroll-mt-16 px-4 py-12 sm:px-6 sm:py-16">
@@ -371,7 +381,7 @@ function Home({ pageReady = true }: HomeProps) {
             </div>
           ) : businessError ? (
             <div className="rounded-2xl border border-[#f0d9dc] bg-[#fff8f8] px-6 py-12 text-center">
-              <p className="text-lg font-semibold text-[#6d3540]">We couldn't load Compass right now.</p>
+              <p className="text-lg font-semibold text-[#6d3540]">{businessError}</p>
               <button
                 type="button"
                 onClick={() => window.location.reload()}

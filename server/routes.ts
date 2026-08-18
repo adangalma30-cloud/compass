@@ -3,6 +3,7 @@ import { clerkClient, getAuth } from "@clerk/express";
 import {
   addFavorite,
   databaseConfigured,
+  databaseReachable,
   getBusiness,
   getFavorites,
   listBusinesses,
@@ -74,10 +75,15 @@ function numberParam(value: unknown) {
 
 const router = Router();
 
-router.get("/health", (_request, response) => {
+router.get("/health", async (_request, response) => {
+  // Reports real connectivity so a misconfigured deployment is visible from
+  // the outside rather than only surfacing as failed favorites later.
+  const databaseOk = databaseConfigured ? await databaseReachable() : false;
   response.json({
     ok: true,
     databaseConfigured,
+    databaseReachable: databaseOk,
+    authConfigured: Boolean(process.env.CLERK_SECRET_KEY && process.env.CLERK_PUBLISHABLE_KEY),
     liveDiscoveryConfigured: hasPlacesProvider(),
   });
 });

@@ -1,4 +1,4 @@
-# Compass 0.0.5
+# Compass 0.0.6
 
 Compass is a mobile-friendly local business discovery app: Clerk accounts,
 verified-email gated features, saved places, and a server-side discovery API,
@@ -11,7 +11,7 @@ packaged as an Android APK with Capacitor.
 ```bash
 git clone https://github.com/adangalma30-cloud/compass.git
 cd compass
-git checkout compass-0.0.5
+git checkout compass-0.0.6
 
 npm run setup      # installs dependencies and creates .env from the template
 # edit .env and add your Clerk keys
@@ -39,6 +39,8 @@ Copy `.env.example` to `.env` and fill it in. `.env` is git-ignored.
 | --- | --- | --- |
 | `VITE_CLERK_PUBLISHABLE_KEY` | **yes** | Client Clerk key. Without it the app shows "authentication is not configured". |
 | `CLERK_SECRET_KEY` | **yes** (server) | Lets the API verify session tokens. |
+| `CLERK_PUBLISHABLE_KEY` | **yes** (server) | Clerk's Express middleware needs this alongside the secret key, or every API request fails. |
+| `PUBLIC_API_URL` | **yes** (server, deployed) | The API's own public URL, so place-photo links are absolute and load in the APK. |
 | `VITE_API_URL` | **yes for Android** | Public HTTPS URL of the API. See the warning below. |
 | `DATABASE_URL` | no | PostgreSQL. Without it the API serves bundled preview listings and saved places are unavailable. |
 | `GOOGLE_PLACES_API_KEY` | no | Server-only. Enables live search, nearby discovery, place photos. |
@@ -91,11 +93,17 @@ npm run android:clean  # clean the Gradle build
 npm run android:sync   # rebuild web assets and sync into the Android project
 ```
 
+### Deploying the backend
+
+The APK cannot work without the API running on a public HTTPS URL. See
+[DEPLOYMENT.md](DEPLOYMENT.md) for the Render blueprint (`render.yaml`) and the
+container option (`Dockerfile`).
+
 ### Building in CI
 
 `adangalma30-cloud/Workflow` builds the APK on GitHub Actions. Run the
 **Build Compass APK** workflow and set `compass_ref` to the branch you want
-(for example `compass-0.0.5`). The APK is uploaded as the `compass-debug-apk`
+(for example `compass-0.0.6`). The APK is uploaded as the `compass-debug-apk`
 artifact.
 
 The workflow needs `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_API_URL` as repository
