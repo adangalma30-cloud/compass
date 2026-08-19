@@ -23,8 +23,23 @@ type RequestWithIdentity = Request & {
   };
 };
 
+/**
+ * Reads the authenticated user id, if any.
+ *
+ * getAuth() throws when clerkMiddleware() is not mounted (which happens when
+ * the Clerk keys are unset). Public routes must still work in that state, so
+ * the failure is treated as "not signed in" rather than propagating.
+ */
+function currentUserId(request: Request): string | undefined {
+  try {
+    return getAuth(request).userId ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function identityForRequest(request: Request) {
-  const userId = getAuth(request).userId;
+  const userId = currentUserId(request);
   if (!userId) return undefined;
   const user = await clerkClient.users.getUser(userId);
   const emailAddress = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses[0]?.emailAddress;
@@ -90,8 +105,7 @@ router.get("/health", async (_request, response) => {
 
 router.get("/businesses", async (request, response) => {
   try {
-    const auth = getAuth(request);
-    const authenticated = Boolean(auth.userId);
+    const authenticated = Boolean(currentUserId(request));
     const requestedLimit = numberParam(request.query.limit);
     const limit = authenticated ? Math.min(requestedLimit ?? 50, 100) : Math.min(requestedLimit ?? 4, 4);
     const params = {
@@ -127,7 +141,10 @@ router.get("/businesses", async (request, response) => {
       guestLimited: !authenticated,
       liveDiscoveryConfigured: hasPlacesProvider(),
     });
-  } catch {
+  } catch (error) {
+    // Logged so a real outage is diagnosable from the host's logs rather than
+    // silently surfacing as a generic 503.
+    process.stderr.write(`compass-api: /businesses failed: ${String(error)}\n`);
     response.status(503).json({
       error: "We couldn't load Compass right now.",
       code: "businesses_unavailable",
