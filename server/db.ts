@@ -182,9 +182,24 @@ export async function initDatabase() {
   const client = await pool.connect();
   try {
     await client.query(schema);
-    if (process.env.NODE_ENV !== "production" && process.env.COMPASS_SEED_PREVIEW_DATA !== "false") {
-      for (const business of previewBusinesses) {
-        await seedPreviewBusiness(client, business);
+
+    // Seed the starter listings when the table is empty.
+    //
+    // This previously skipped production entirely, which left a freshly
+    // deployed database with no rows at all: the API returned zero results and
+    // the app looked broken. Seeding is now driven by whether any businesses
+    // exist rather than by NODE_ENV, so a new deployment has content while an
+    // existing one is never overwritten. Set COMPASS_SEED_PREVIEW_DATA=false to
+    // opt out once real data is loaded.
+    if (process.env.COMPASS_SEED_PREVIEW_DATA !== "false") {
+      const existing = await client.query<{ count: string }>(
+        "SELECT COUNT(*)::text AS count FROM compass_businesses",
+      );
+      if (Number(existing.rows[0]?.count ?? "0") === 0) {
+        for (const business of previewBusinesses) {
+          await seedPreviewBusiness(client, business);
+        }
+        process.stdout.write(`compass-api: seeded ${previewBusinesses.length} starter listings\n`);
       }
     }
     return true;
