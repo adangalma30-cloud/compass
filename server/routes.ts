@@ -57,13 +57,22 @@ const requireAuth: RequestHandler = async (request, response, next) => {
   try {
     const identity = await identityForRequest(request);
     if (!identity) {
+      // Distinguishes "no/!valid token" from "token fine, lookup failed", which
+      // otherwise look identical from the client.
+      const hasHeader = Boolean(request.headers.authorization);
+      process.stderr.write(
+        `compass-api: auth refused on ${request.method} ${request.originalUrl} (authorization header ${hasHeader ? "present but not accepted" : "absent"})\n`,
+      );
       response.status(401).json({ error: "Authentication required", code: "unauthorized" });
       return;
     }
     (request as RequestWithIdentity).compassIdentity = identity;
     await upsertUser(identity);
     next();
-  } catch {
+  } catch (error) {
+    process.stderr.write(
+      `compass-api: auth validation failed on ${request.method} ${request.originalUrl}: ${String(error)}\n`,
+    );
     response.status(401).json({ error: "Authentication could not be validated", code: "unauthorized" });
   }
 };
@@ -72,6 +81,9 @@ const requireVerified: RequestHandler = async (request, response, next) => {
   await requireAuth(request, response, () => {
     const identity = (request as RequestWithIdentity).compassIdentity;
     if (!identity?.emailVerified) {
+      process.stderr.write(
+        `compass-api: rejected ${request.method} ${request.originalUrl} for ${identity?.id ?? "unknown"}: email not verified server-side\n`,
+      );
       response.status(403).json({
         error: "Verify your email to unlock this Compass feature.",
         code: "email_unverified",

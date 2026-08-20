@@ -59,7 +59,15 @@ app.use(express.json({ limit: "1mb" }));
  */
 const clerkConfigured = Boolean(process.env.CLERK_SECRET_KEY && process.env.CLERK_PUBLISHABLE_KEY);
 if (clerkConfigured) {
-  const clerk = clerkMiddleware();
+  // Clerk stamps an `azp` (authorized party) claim on the session token, taken
+  // from the origin that requested it. The token is refused unless that origin
+  // is listed here. The Android WebView requests tokens from https://localhost,
+  // so without this every authenticated call from the APK returns 401 while the
+  // client still believes it is signed in - saving a place appears to succeed
+  // and then reverts.
+  const clerk = clerkMiddleware({
+    authorizedParties: Array.from(staticOrigins),
+  });
   app.use((request, response, next) => {
     Promise.resolve(clerk(request, response, next)).catch(() => {
       // Leave the request unauthenticated; protected routes still reject it.

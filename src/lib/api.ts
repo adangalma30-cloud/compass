@@ -69,6 +69,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = await getSessionToken().catch(() => null);
   if (token) headers.Authorization = `Bearer ${token}`;
 
+  // A free-tier host sleeps when idle and can take ~50s to wake. Without a
+  // ceiling the request hangs indefinitely and the UI never resolves, so the
+  // timeout is generous enough to survive a cold start but still finite.
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 60_000);
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -77,9 +83,12 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       // Android build where cookies are unavailable.
       credentials: "include",
       headers,
+      signal: controller.signal,
     });
   } catch {
     throw new ApiError("We couldn't reach Compass. Check your connection.", 0, "network_error");
+  } finally {
+    window.clearTimeout(timeout);
   }
 
   if (!response.ok) {
