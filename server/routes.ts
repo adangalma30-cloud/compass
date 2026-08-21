@@ -135,6 +135,17 @@ const MIN_CACHED_NEARBY = 5;
 const refreshingCells = new Set<string>();
 
 /**
+ * How long a request will wait on an inline area fetch before answering from
+ * whatever the cache holds.
+ *
+ * Overpass mirrors can each take ~20s to fail when they refuse a host, which
+ * turned a cold-area request into a 24s wait. The fetch continues in the
+ * background past this deadline, so the area is still populated for the next
+ * visitor - the user simply is not made to wait for it.
+ */
+const INLINE_REFRESH_BUDGET_MS = 6000;
+
+/**
  * Populates the cache for an area from OpenStreetMap.
  *
  * Failures are logged and swallowed: a refresh is an optimisation, and nearby
@@ -193,11 +204,18 @@ router.get("/businesses", async (request, response) => {
         ? (await nearbyFromCache({ latitude: lat, longitude: lon, radius, limit: MIN_CACHED_NEARBY })).length
         : cached.length;
 
-      // Too little to be useful: fetch now so the first visitor to an area
-      // still gets results.
+      // Too little to be useful: try to fetch now so the first visitor to an
+      // area still gets results, but never block longer than the budget. The
+      // fetch keeps running afterwards to populate the area for next time.
       if (availableNearby < MIN_CACHED_NEARBY && (!coverage.known || !coverage.fresh)) {
-        const fetched = await refreshArea(lat, lon, radius);
-        if (fetched > 0) {
+        const refresh = refreshArea(lat, lon, radius);
+        const completed = await Promise.race([
+          refresh,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), INLINE_REFRESH_BUDGET_MS)),
+        ]);
+        // Prevent an unhandled rejection once the race has already resolved.
+        void refresh.catch(() => undefined);
+        if (completed !== null && completed > 0) {
           cached = await nearbyFromCache({ latitude: lat, longitude: lon, radius, limit });
         }
       } else if (coverage.known && !coverage.fresh) {
