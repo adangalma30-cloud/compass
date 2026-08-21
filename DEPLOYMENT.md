@@ -32,12 +32,12 @@ In Render → `compass-api` → **Environment**, set:
 | `CLERK_SECRET_KEY` | `sk_test_…` from the Clerk Dashboard | Verifies session tokens. **Secret.** |
 | `CLERK_PUBLISHABLE_KEY` | `pk_test_…` (same value the app uses) | **Also required.** Clerk's Express middleware needs both keys; without this every API request fails. |
 | `PUBLIC_API_URL` | The service's own URL, e.g. `https://compass-api.onrender.com` | Makes place-photo URLs absolute so images load in the Android WebView. |
-| `GOOGLE_PLACES_API_KEY` | Your Google key | Optional. Enables live search and nearby discovery. **Secret, server-only.** |
+| `OVERPASS_API_URL` | Optional | Override the Overpass mirror used for nearby discovery. Discovery works without it. |
 | `CORS_ALLOWED_ORIGINS` | e.g. `https://compass.example.com` | Only needed for a deployed **web** build. Android origins are always allowed. |
 
 `DATABASE_URL` is set by the blueprint — do not edit it.
 
-> **Never** give `CLERK_SECRET_KEY`, `GOOGLE_PLACES_API_KEY` or `DATABASE_URL`
+> **Never** give `CLERK_SECRET_KEY` or `DATABASE_URL`
 > a `VITE_` prefix. Anything `VITE_` prefixed is compiled into the app bundle
 > and is readable by anyone who downloads the APK. `npm run check` fails the
 > build if it detects this.
@@ -66,7 +66,7 @@ Any `false` tells you exactly which variable is missing:
 | --- | --- |
 | `databaseReachable` | `DATABASE_URL` wrong, or the database is still starting. |
 | `authConfigured` | `CLERK_SECRET_KEY` **or** `CLERK_PUBLISHABLE_KEY` missing. |
-| `liveDiscoveryConfigured` | `GOOGLE_PLACES_API_KEY` not set. |
+| `liveDiscoveryConfigured` | Always true: OpenStreetMap discovery needs no API key. |
 
 ## 4. Point the app at the API
 
@@ -80,6 +80,21 @@ VITE_API_URL = https://YOUR-SERVICE.onrender.com
 No trailing slash. Then run the **Build Compass APK** workflow.
 
 ---
+
+## Business discovery
+
+Discovery is backed by OpenStreetMap and requires no API key or billing:
+
+- **Nominatim** for text search
+- **Overpass** for nearby lookups around a coordinate
+
+Both are donated infrastructure with strict usage policies. The server sends an
+identifying `User-Agent`, throttles Nominatim to one request per second, caches
+responses for ten minutes, and applies request timeouts. Results carry an
+`attribution` field which the app displays, as the ODbL licence requires.
+
+If your traffic grows beyond light use, point `OVERPASS_API_URL` at a mirror or
+your own Overpass instance.
 
 ## Free tier caveat
 

@@ -28,9 +28,13 @@ services:
       # expose this to the client.
       - key: CLERK_SECRET_KEY
         sync: false
-      # Optional: enables live search, nearby discovery and place photos.
-      # Server-only. Must never be given a VITE_ prefix.
-      - key: GOOGLE_PLACES_API_KEY
+      # Required as well as the secret key: clerkMiddleware() throws on every
+      # request without it, which takes the whole API down.
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      # Business discovery uses OpenStreetMap and needs no API key.
+      # Optional: point Overpass at a mirror or your own instance.
+      - key: OVERPASS_API_URL
         sync: false
       # Set to this service's own public URL once Render assigns it, so place
       # photo URLs are absolute and load inside the Android WebView.

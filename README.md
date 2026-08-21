@@ -43,7 +43,8 @@ Copy `.env.example` to `.env` and fill it in. `.env` is git-ignored.
 | `PUBLIC_API_URL` | **yes** (server, deployed) | The API's own public URL, so place-photo links are absolute and load in the APK. |
 | `VITE_API_URL` | **yes for Android** | Public HTTPS URL of the API. See the warning below. |
 | `DATABASE_URL` | no | PostgreSQL. Without it the API serves bundled preview listings and saved places are unavailable. |
-| `GOOGLE_PLACES_API_KEY` | no | Server-only. Enables live search, nearby discovery, place photos. |
+| `OVERPASS_API_URL` | no | Override the Overpass mirror used for nearby discovery. |
+| `OSM_USER_AGENT` | no | Identifies the app to OpenStreetMap. A default is provided. |
 | `PORT` | no | API port, defaults to `8787`. |
 
 Anything prefixed `VITE_` is compiled into the client bundle and is public.

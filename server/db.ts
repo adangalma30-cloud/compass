@@ -7,7 +7,7 @@ export type ApiBusiness = Omit<Business, "id"> & {
   id: string;
   latitude?: number;
   longitude?: number;
-  source: "preview" | "google_places";
+  source: "preview" | "google_places" | "openstreetmap";
   externalId?: string;
 };
 
@@ -31,7 +31,7 @@ type BusinessRow = {
   latitude: number | null;
   longitude: number | null;
   gallery: string[] | null;
-  source: "preview" | "google_places";
+  source: "preview" | "google_places" | "openstreetmap";
   external_id: string | null;
 };
 

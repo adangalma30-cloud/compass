@@ -11,7 +11,13 @@ import {
   upsertBusiness,
   upsertUser,
 } from "./db";
-import { fetchPlacePhoto, hasPlacesProvider, searchPlaces } from "./places";
+import {
+  OSM_ATTRIBUTION,
+  PlacesProviderError,
+  hasPlacesProvider,
+  nearbyPlaces,
+  searchPlaces,
+} from "./places";
 
 type RequestWithIdentity = Request & {
   compassIdentity?: {
@@ -116,47 +122,77 @@ router.get("/health", async (_request, response) => {
 });
 
 router.get("/businesses", async (request, response) => {
+  const authenticated = Boolean(currentUserId(request));
+  const requestedLimit = numberParam(request.query.limit);
+  const limit = authenticated ? Math.min(requestedLimit ?? 50, 100) : Math.min(requestedLimit ?? 4, 4);
+  const latitude = numberParam(request.query.latitude);
+  const longitude = numberParam(request.query.longitude);
+  const query = typeof request.query.query === "string" ? request.query.query.trim() : "";
+  const category = typeof request.query.category === "string" ? request.query.category : undefined;
+  const city = typeof request.query.city === "string" ? request.query.city : undefined;
+  const nearbyRequested = request.query.nearby === "true" && latitude !== undefined && longitude !== undefined;
+
+  // Live OpenStreetMap discovery needs no API key, so it is used whenever the
+  // request actually asks for a search or a nearby lookup. Everything else
+  // (the initial home feed) keeps serving the curated database listings.
+  const wantsLiveDiscovery = Boolean(query) || nearbyRequested;
+
   try {
-    const authenticated = Boolean(currentUserId(request));
-    const requestedLimit = numberParam(request.query.limit);
-    const limit = authenticated ? Math.min(requestedLimit ?? 50, 100) : Math.min(requestedLimit ?? 4, 4);
-    const params = {
-      query: typeof request.query.query === "string" ? request.query.query : undefined,
-      category: typeof request.query.category === "string" ? request.query.category : undefined,
-      city: typeof request.query.city === "string" ? request.query.city : undefined,
+    if (wantsLiveDiscovery) {
+      const businesses = nearbyRequested && !query
+        ? await nearbyPlaces({
+            latitude: latitude as number,
+            longitude: longitude as number,
+            radius: numberParam(request.query.radius),
+            limit,
+          })
+        : await searchPlaces({ query, category, city, latitude, longitude, limit });
+
+      // Cache results so /businesses/:id and favorites can resolve them later.
+      for (const business of businesses.slice(0, limit)) {
+        try {
+          await upsertBusiness(business);
+        } catch (error) {
+          // A caching failure must not fail the search itself.
+          process.stderr.write(`compass-api: could not cache ${business.id}: ${String(error)}\n`);
+        }
+      }
+
+      response.json({
+        businesses: businesses.slice(0, limit),
+        count: Math.min(businesses.length, limit),
+        source: "live",
+        guestLimited: !authenticated,
+        liveDiscoveryConfigured: true,
+        attribution: OSM_ATTRIBUTION,
+      });
+      return;
+    }
+
+    const businesses = await listBusinesses({
+      query: query || undefined,
+      category,
+      city,
       featured: request.query.featured === "true",
       limit,
-    };
-
-    const liveSearchRequested = Boolean(params.query || request.query.nearby === "true");
-    let businesses;
-    let source: "preview" | "live" = "preview";
-    if (authenticated && liveSearchRequested && hasPlacesProvider()) {
-      const live = await searchPlaces({
-        query: params.query,
-        category: params.category,
-        city: params.city,
-        latitude: numberParam(request.query.latitude),
-        longitude: numberParam(request.query.longitude),
-      });
-      businesses = live ?? [];
-      source = "live";
-      for (const business of businesses) await upsertBusiness(business);
-    } else {
-      businesses = await listBusinesses(params);
-    }
+    });
 
     response.json({
       businesses,
       count: businesses.length,
-      source,
+      source: "preview",
       guestLimited: !authenticated,
-      liveDiscoveryConfigured: hasPlacesProvider(),
+      liveDiscoveryConfigured: true,
+      attribution: OSM_ATTRIBUTION,
     });
   } catch (error) {
-    // Logged so a real outage is diagnosable from the host's logs rather than
-    // silently surfacing as a generic 503.
     process.stderr.write(`compass-api: /businesses failed: ${String(error)}\n`);
+    // A provider problem is upstream, not a fault in this service, and the
+    // message is safe to show the user.
+    if (error instanceof PlacesProviderError) {
+      response.status(502).json({ error: error.message, code: "discovery_unavailable" });
+      return;
+    }
     response.status(503).json({
       error: "We couldn't load Compass right now.",
       code: "businesses_unavailable",
@@ -177,26 +213,16 @@ router.get("/businesses/:id", async (request, response) => {
   }
 });
 
-router.get("/place-photo", async (request, response) => {
-  const reference = typeof request.query.reference === "string" ? request.query.reference : "";
-  if (!reference) {
-    response.status(400).end();
-    return;
-  }
-  try {
-    const image = await fetchPlacePhoto(reference);
-    if (!image || !image.ok || !image.body) {
-      response.status(404).end();
-      return;
-    }
-    response.status(image.status);
-    response.setHeader("Cache-Control", "public, max-age=86400");
-    response.setHeader("Content-Type", image.headers.get("content-type") ?? "image/jpeg");
-    const buffer = Buffer.from(await image.arrayBuffer());
-    response.send(buffer);
-  } catch {
-    response.status(404).end();
-  }
+/**
+ * Legacy photo proxy.
+ *
+ * Discovery is now backed by OpenStreetMap, which does not supply photography,
+ * so there is nothing to proxy. The route is kept so photo URLs cached by an
+ * earlier build resolve to a clean 404 and the UI falls back to its placeholder
+ * rather than hanging or erroring.
+ */
+router.get("/place-photo", (_request, response) => {
+  response.status(404).json({ error: "No photo available.", code: "photo_unavailable" });
 });
 
 router.get("/me", requireAuth, async (request, response) => {

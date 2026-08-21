@@ -17,7 +17,7 @@ export type Business = {
   latitude?: number;
   longitude?: number;
   gallery?: string[];
-  source?: "preview" | "google_places";
+  source?: "preview" | "google_places" | "openstreetmap";
   externalId?: string;
   featured?: boolean;
   // Detail page fields

@@ -123,11 +123,11 @@ function reportConfiguration() {
   if (!process.env.DATABASE_URL) {
     problems.push("DATABASE_URL is not set: saved places are unavailable and listings fall back to bundled preview data.");
   }
-  if (!process.env.GOOGLE_PLACES_API_KEY) {
-    problems.push("GOOGLE_PLACES_API_KEY is not set: live search and nearby discovery stay disabled.");
-  }
+  // Discovery is backed by OpenStreetMap and needs no API key, so there is
+  // nothing to warn about for search. PUBLIC_API_URL is still worth reporting
+  // because other absolute links depend on it.
   if (!process.env.PUBLIC_API_URL) {
-    problems.push("PUBLIC_API_URL is not set: place photo URLs will be relative and will not load in the Android app.");
+    problems.push("PUBLIC_API_URL is not set: absolute links back to this API cannot be generated.");
   }
   for (const problem of problems) process.stderr.write(`compass-api: ${problem}\n`);
 }

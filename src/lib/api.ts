@@ -8,6 +8,8 @@ type BusinessesResponse = {
   source: "preview" | "live";
   guestLimited: boolean;
   liveDiscoveryConfigured: boolean;
+  /** Data licence notice that must be displayed alongside live results. */
+  attribution?: string;
 };
 
 type MeResponse = {
@@ -114,6 +116,8 @@ export const api = {
     nearby?: boolean;
     latitude?: number;
     longitude?: number;
+    /** Search radius in metres for nearby discovery. */
+    radius?: number;
     limit?: number;
   } = {}) {
     const search = new URLSearchParams();

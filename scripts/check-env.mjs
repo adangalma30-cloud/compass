@@ -121,7 +121,7 @@ if (isPlaceholder(env.CLERK_SECRET_KEY)) {
 
 // A secret leaking into the client bundle is a real security problem.
 for (const key of Object.keys(env)) {
-  if (key.startsWith("VITE_") && /SECRET|GOOGLE_PLACES/i.test(key) && env[key]) {
+  if (key.startsWith("VITE_") && /SECRET|API_KEY|PASSWORD|DATABASE_URL/i.test(key) && env[key]) {
     problem(
       `${key} exposes a server secret to the client bundle.`,
       "Remove the VITE_ prefix. Anything VITE_ prefixed ships inside the APK.",
@@ -133,9 +133,7 @@ for (const key of Object.keys(env)) {
 if (!env.DATABASE_URL) {
   notes.push("No DATABASE_URL: the API serves bundled preview listings and saved places are unavailable.");
 }
-if (!env.GOOGLE_PLACES_API_KEY) {
-  notes.push("No GOOGLE_PLACES_API_KEY: live search and nearby discovery stay disabled.");
-}
+// Discovery uses OpenStreetMap (Nominatim + Overpass), which need no API key.
 
 // --- Android-specific -------------------------------------------------------
 if (androidMode) {

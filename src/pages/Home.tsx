@@ -56,6 +56,10 @@ function Home({ pageReady = true }: HomeProps) {
   const [businessesFromApi, setBusinessesFromApi] = useState(businesses);
   const [dataSource, setDataSource] = useState<"preview" | "live">("preview");
   const [liveDiscoveryConfigured, setLiveDiscoveryConfigured] = useState(false);
+  const [attribution, setAttribution] = useState("");
+  // Applied search term. Kept separate from the input so requests fire on a
+  // debounce rather than on every keystroke, which the OSM providers require.
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [loadingBusinesses, setLoadingBusinesses] = useState(true);
   const [businessError, setBusinessError] = useState("");
   const { favoriteIds, toggleFavorite, isFavorite, favoriteError } = useFavorites(
@@ -80,12 +84,20 @@ function Home({ pageReady = true }: HomeProps) {
     [businessesFromApi],
   );
 
+  // Debounce typing into the term that actually triggers a request. Live
+  // discovery hits donated OpenStreetMap infrastructure, so a request per
+  // keystroke would be both slow and a policy violation.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAppliedSearch(search.trim()), 450);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     if (!authLoaded) return;
     let cancelled = false;
     api
       .getBusinesses({
-        query: isSignedIn ? search : undefined,
+        query: isSignedIn ? appliedSearch : undefined,
         category: isSignedIn ? selectedCategory : undefined,
         city: isSignedIn ? selectedCity : undefined,
         limit: isSignedIn ? 100 : 4,
@@ -93,19 +105,29 @@ function Home({ pageReady = true }: HomeProps) {
       .then((response) => {
         if (cancelled) return;
         setBusinessError("");
-        if (response.businesses.length > 0) setBusinessesFromApi(response.businesses);
+        setLoadingBusinesses(false);
+        // A live search legitimately returns nothing, and that must be shown as
+        // an empty state rather than leaving the previous results on screen.
+        if (response.source === "live" || response.businesses.length > 0) {
+          setBusinessesFromApi(response.businesses);
+        }
         setDataSource(response.source);
         setLiveDiscoveryConfigured(response.liveDiscoveryConfigured);
+        setAttribution(response.attribution ?? "");
       })
       .catch((error: unknown) => {
         if (cancelled) return;
         // Distinguish "you are offline" from "the API is down", so the user
         // knows whether retrying will help.
-        setBusinessError(
-          error instanceof ApiError && error.code === "network_error"
-            ? "We couldn't reach Compass. Check your connection and try again."
-            : "We couldn't load Compass right now.",
-        );
+        // Each failure mode gets its own message so the user knows whether
+        // retrying will help.
+        if (error instanceof ApiError && error.code === "network_error") {
+          setBusinessError("We couldn't reach Compass. Check your connection and try again.");
+        } else if (error instanceof ApiError && error.code === "discovery_unavailable") {
+          setBusinessError(error.message);
+        } else {
+          setBusinessError("We couldn't load Compass right now.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingBusinesses(false);
@@ -113,7 +135,7 @@ function Home({ pageReady = true }: HomeProps) {
     return () => {
       cancelled = true;
     };
-  }, [authLoaded, isSignedIn, search, selectedCategory, selectedCity]);
+  }, [authLoaded, isSignedIn, appliedSearch, selectedCategory, selectedCity]);
 
   function handleFavorite(id: string | number) {
     if (!isSignedIn) {
@@ -149,22 +171,35 @@ function Home({ pageReady = true }: HomeProps) {
         nearby: true,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-        limit: 100,
+        radius: 2000,
+        limit: 60,
       });
+      setBusinessError("");
       setBusinessesFromApi(response.businesses);
       setDataSource(response.source);
       setLiveDiscoveryConfigured(response.liveDiscoveryConfigured);
+      setAttribution(response.attribution ?? "");
+      // Clearing the filters prevents a stale category hiding the new results.
       setSearch("");
+      setAppliedSearch("");
       setSelectedCategory("All");
       setSelectedCity("All cities");
       setLocationMessage(
-        response.source === "live"
-          ? "Showing live places near your current location."
-          : "Live location discovery is not configured yet, so Compass is showing preview listings.",
+        response.businesses.length > 0
+          ? `Showing ${response.count} place${response.count === 1 ? "" : "s"} near you.`
+          : "No mapped places found within 2 km of you. Try searching instead.",
       );
       window.setTimeout(scrollToResults, 0);
-    } catch {
-      setLocationMessage("Compass couldn't access your location. Check that location services are enabled and try again.");
+    } catch (error) {
+      // Separate a provider outage from a device permission problem: the user
+      // can act on one and not the other.
+      if (error instanceof ApiError && error.code === "discovery_unavailable") {
+        setLocationMessage(error.message);
+      } else if (error instanceof ApiError && error.code === "network_error") {
+        setLocationMessage("We couldn't reach Compass. Check your connection and try again.");
+      } else {
+        setLocationMessage("Compass couldn't access your location. Check that location services are enabled and try again.");
+      }
     } finally {
       setLocationLoading(false);
     }
@@ -306,9 +341,11 @@ function Home({ pageReady = true }: HomeProps) {
               onDismiss={() => setAuthPrompt(null)}
             />
           )}
-          {isSignedIn && !liveDiscoveryConfigured && (
-            <p className="mt-2 text-xs text-[#7d88a4]">
-              Live search and location discovery need the server-side Google Places integration.
+          {/* Required by the OpenStreetMap data licence wherever results are
+              shown. Only rendered when results actually came from the provider. */}
+          {attribution && dataSource === "live" && (
+            <p className="mt-2 text-[11px] text-[#7d88a4]">
+              Place data {attribution}
             </p>
           )}
         </motion.div>
