@@ -10,6 +10,12 @@ type BusinessesResponse = {
   liveDiscoveryConfigured: boolean;
   /** Data licence notice that must be displayed alongside live results. */
   attribution?: string;
+  /**
+   * State of the local place cache for a nearby request.
+   * "fresh" served from an up-to-date area, "refreshing" served from a stale
+   * area while it updates behind the response, "empty" nothing cached yet.
+   */
+  cacheStatus?: "fresh" | "refreshing" | "empty";
 };
 
 type MeResponse = {

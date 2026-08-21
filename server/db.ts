@@ -88,6 +88,23 @@ const schema = `
     PRIMARY KEY (user_id, business_id)
   );
 
+  -- Records which geographic areas have been populated from OpenStreetMap and
+  -- when. Nearby search reads the cache and consults this table to decide
+  -- whether a top-up from the upstream provider is warranted, so a normal
+  -- request never depends on a live Overpass call.
+  CREATE TABLE IF NOT EXISTS compass_coverage (
+    cell TEXT PRIMARY KEY,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    radius INTEGER NOT NULL,
+    place_count INTEGER NOT NULL DEFAULT 0,
+    refreshed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  -- Bounding-box lookups for nearby search.
+  CREATE INDEX IF NOT EXISTS compass_businesses_latlon_idx
+    ON compass_businesses(latitude, longitude);
+
   CREATE INDEX IF NOT EXISTS compass_businesses_category_idx
     ON compass_businesses(category);
   CREATE INDEX IF NOT EXISTS compass_businesses_city_idx
@@ -422,4 +439,129 @@ export async function removeFavorite(userId: string, businessId: string) {
     `DELETE FROM compass_favorites WHERE user_id = $1 AND business_id = $2`,
     [userId, businessId],
   );
+}
+
+// ---------------------------------------------------------------------------
+// Geographic cache for nearby discovery
+// ---------------------------------------------------------------------------
+
+/**
+ * How long a fetched area is considered fresh. Business data changes slowly,
+ * so a long window keeps upstream load low while still picking up edits.
+ */
+const COVERAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Identifies a coverage area. ~1.1km per 0.01 degree, so this buckets requests. */
+function coverageCell(latitude: number, longitude: number) {
+  return `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+}
+
+export type CoverageState = {
+  known: boolean;
+  fresh: boolean;
+  placeCount: number;
+  refreshedAt?: Date;
+};
+
+/** Reports whether an area has been fetched before and whether it is stale. */
+export async function coverageFor(latitude: number, longitude: number): Promise<CoverageState> {
+  if (!pool) return { known: false, fresh: false, placeCount: 0 };
+  const result = await pool.query<{ place_count: number; refreshed_at: Date }>(
+    "SELECT place_count, refreshed_at FROM compass_coverage WHERE cell = $1",
+    [coverageCell(latitude, longitude)],
+  );
+  const row = result.rows[0];
+  if (!row) return { known: false, fresh: false, placeCount: 0 };
+  return {
+    known: true,
+    fresh: Date.now() - new Date(row.refreshed_at).getTime() < COVERAGE_TTL_MS,
+    placeCount: row.place_count,
+    refreshedAt: new Date(row.refreshed_at),
+  };
+}
+
+/** Marks an area as populated, so later requests can be served from cache. */
+export async function recordCoverage(
+  latitude: number,
+  longitude: number,
+  radius: number,
+  placeCount: number,
+) {
+  if (!pool) return;
+  await pool.query(
+    `INSERT INTO compass_coverage (cell, latitude, longitude, radius, place_count, refreshed_at)
+     VALUES ($1, $2, $3, $4, $5, NOW())
+     ON CONFLICT (cell) DO UPDATE SET
+       radius = GREATEST(compass_coverage.radius, EXCLUDED.radius),
+       place_count = EXCLUDED.place_count,
+       refreshed_at = NOW()`,
+    [coverageCell(latitude, longitude), latitude, longitude, radius, placeCount],
+  );
+}
+
+/**
+ * Nearby businesses straight from PostgreSQL.
+ *
+ * A bounding box narrows the rows using the lat/lon index, then the exact
+ * great-circle distance is computed in SQL so results are correctly ordered and
+ * filtered. This keeps nearby working even when every upstream provider is
+ * refusing traffic.
+ */
+export async function nearbyFromCache(params: {
+  latitude: number;
+  longitude: number;
+  radius: number;
+  limit: number;
+}): Promise<Array<ApiBusiness & { distanceMetres: number }>> {
+  if (!pool) return [];
+  const { latitude, longitude, radius, limit } = params;
+
+  // Degrees of latitude are constant; longitude narrows towards the poles.
+  const latDelta = radius / 111_320;
+  const lonDelta = radius / (111_320 * Math.max(Math.cos((latitude * Math.PI) / 180), 0.01));
+
+  const result = await pool.query<BusinessRow & { distance_metres: number }>(
+    `SELECT id, name, description, rating, review_count, city, category, tags, icon,
+            image_url, featured, ai_summary, address, phone, website, opening_hours,
+            latitude, longitude, gallery, source, external_id,
+            (6371000 * acos(
+               LEAST(1, GREATEST(-1,
+                 cos(radians($1)) * cos(radians(latitude)) *
+                 cos(radians(longitude) - radians($2)) +
+                 sin(radians($1)) * sin(radians(latitude))
+               ))
+             )) AS distance_metres
+       FROM compass_businesses
+      WHERE latitude IS NOT NULL
+        AND longitude IS NOT NULL
+        AND latitude BETWEEN $3 AND $4
+        AND longitude BETWEEN $5 AND $6
+     ORDER BY distance_metres ASC
+      LIMIT $7`,
+    [
+      latitude,
+      longitude,
+      latitude - latDelta,
+      latitude + latDelta,
+      longitude - lonDelta,
+      longitude + lonDelta,
+      limit,
+    ],
+  );
+
+  return result.rows
+    .map((row) => ({ ...rowToBusiness(row), distanceMetres: Number(row.distance_metres) }))
+    .filter((business) => business.distanceMetres <= radius);
+}
+
+/** Bulk upsert used when caching a page of upstream results. */
+export async function cacheBusinesses(businesses: ApiBusiness[]) {
+  for (const business of businesses) {
+    try {
+      await upsertBusiness(business);
+    } catch (error) {
+      // One bad row must not abandon the rest of the page.
+      process.stderr.write(`compass-api: could not cache ${business.id}: ${String(error)}\n`);
+    }
+  }
 }

@@ -2,13 +2,16 @@ import { Router, type Request, type RequestHandler } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import {
   addFavorite,
+  cacheBusinesses,
+  coverageFor,
   databaseConfigured,
   databaseReachable,
+  nearbyFromCache,
+  recordCoverage,
   getBusiness,
   getFavorites,
   listBusinesses,
   removeFavorite,
-  upsertBusiness,
   upsertUser,
 } from "./db";
 import {
@@ -121,6 +124,41 @@ router.get("/health", async (_request, response) => {
   });
 });
 
+/**
+ * Minimum number of cached places before an area is considered usable. Below
+ * this a top-up is fetched inline, because returning almost nothing would look
+ * like the feature is broken.
+ */
+const MIN_CACHED_NEARBY = 5;
+
+/** Areas currently being refreshed, so concurrent requests trigger one fetch. */
+const refreshingCells = new Set<string>();
+
+/**
+ * Populates the cache for an area from OpenStreetMap.
+ *
+ * Failures are logged and swallowed: a refresh is an optimisation, and nearby
+ * search must keep working from cache when every upstream mirror is refusing
+ * traffic.
+ */
+async function refreshArea(latitude: number, longitude: number, radius: number): Promise<number> {
+  const cell = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+  if (refreshingCells.has(cell)) return 0;
+  refreshingCells.add(cell);
+  try {
+    const places = await nearbyPlaces({ latitude, longitude, radius, limit: 100 });
+    await cacheBusinesses(places);
+    await recordCoverage(latitude, longitude, radius, places.length);
+    process.stdout.write(`compass-api: cached ${places.length} places for ${cell}\n`);
+    return places.length;
+  } catch (error) {
+    process.stderr.write(`compass-api: area refresh failed for ${cell}: ${String(error)}\n`);
+    return 0;
+  } finally {
+    refreshingCells.delete(cell);
+  }
+}
+
 router.get("/businesses", async (request, response) => {
   const authenticated = Boolean(currentUserId(request));
   const requestedLimit = numberParam(request.query.limit);
@@ -132,31 +170,58 @@ router.get("/businesses", async (request, response) => {
   const city = typeof request.query.city === "string" ? request.query.city : undefined;
   const nearbyRequested = request.query.nearby === "true" && latitude !== undefined && longitude !== undefined;
 
-  // Live OpenStreetMap discovery needs no API key, so it is used whenever the
-  // request actually asks for a search or a nearby lookup. Everything else
-  // (the initial home feed) keeps serving the curated database listings.
-  const wantsLiveDiscovery = Boolean(query) || nearbyRequested;
-
   try {
-    if (wantsLiveDiscovery) {
-      const businesses = nearbyRequested && !query
-        ? await nearbyPlaces({
-            latitude: latitude as number,
-            longitude: longitude as number,
-            radius: numberParam(request.query.radius),
-            limit,
-          })
-        : await searchPlaces({ query, category, city, latitude, longitude, limit });
+    // ---- Nearby: served from our own PostgreSQL cache -------------------
+    //
+    // The cache is the primary source. Overpass is consulted only when the
+    // area has never been fetched or has gone stale, and a stale-but-usable
+    // area is refreshed in the background so the user is never left waiting
+    // on donated infrastructure that frequently refuses cloud traffic.
+    if (nearbyRequested && !query) {
+      const radius = Math.min(Math.max(numberParam(request.query.radius) ?? 2000, 100), 10_000);
+      const lat = latitude as number;
+      const lon = longitude as number;
 
-      // Cache results so /businesses/:id and favorites can resolve them later.
-      for (const business of businesses.slice(0, limit)) {
-        try {
-          await upsertBusiness(business);
-        } catch (error) {
-          // A caching failure must not fail the search itself.
-          process.stderr.write(`compass-api: could not cache ${business.id}: ${String(error)}\n`);
+      const coverage = await coverageFor(lat, lon);
+      let cached = await nearbyFromCache({ latitude: lat, longitude: lon, radius, limit });
+
+      // Whether the area is well stocked must be judged on what the cache
+      // actually holds, not on this page of results: the guest limit is 4,
+      // which would otherwise make every guest request look like a cache miss
+      // and force a blocking upstream fetch.
+      const availableNearby = cached.length >= limit
+        ? (await nearbyFromCache({ latitude: lat, longitude: lon, radius, limit: MIN_CACHED_NEARBY })).length
+        : cached.length;
+
+      // Too little to be useful: fetch now so the first visitor to an area
+      // still gets results.
+      if (availableNearby < MIN_CACHED_NEARBY && (!coverage.known || !coverage.fresh)) {
+        const fetched = await refreshArea(lat, lon, radius);
+        if (fetched > 0) {
+          cached = await nearbyFromCache({ latitude: lat, longitude: lon, radius, limit });
         }
+      } else if (coverage.known && !coverage.fresh) {
+        // Usable but stale: answer from cache immediately and refresh after.
+        void refreshArea(lat, lon, radius);
       }
+
+      response.json({
+        businesses: cached,
+        count: cached.length,
+        source: "live",
+        guestLimited: !authenticated,
+        liveDiscoveryConfigured: true,
+        attribution: OSM_ATTRIBUTION,
+        // Lets the client explain an empty result honestly.
+        cacheStatus: cached.length > 0 ? (coverage.fresh ? "fresh" : "refreshing") : "empty",
+      });
+      return;
+    }
+
+    // ---- Text search: goes upstream, then caches -------------------------
+    if (query) {
+      const businesses = await searchPlaces({ query, category, city, latitude, longitude, limit });
+      await cacheBusinesses(businesses.slice(0, limit));
 
       response.json({
         businesses: businesses.slice(0, limit),
@@ -169,8 +234,8 @@ router.get("/businesses", async (request, response) => {
       return;
     }
 
+    // ---- Default home feed: curated listings from the database -----------
     const businesses = await listBusinesses({
-      query: query || undefined,
       category,
       city,
       featured: request.query.featured === "true",
@@ -187,8 +252,6 @@ router.get("/businesses", async (request, response) => {
     });
   } catch (error) {
     process.stderr.write(`compass-api: /businesses failed: ${String(error)}\n`);
-    // A provider problem is upstream, not a fault in this service, and the
-    // message is safe to show the user.
     if (error instanceof PlacesProviderError) {
       response.status(502).json({ error: error.message, code: "discovery_unavailable" });
       return;

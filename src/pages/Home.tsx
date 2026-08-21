@@ -184,11 +184,17 @@ function Home({ pageReady = true }: HomeProps) {
       setAppliedSearch("");
       setSelectedCategory("All");
       setSelectedCity("All cities");
-      setLocationMessage(
-        response.businesses.length > 0
-          ? `Showing ${response.count} place${response.count === 1 ? "" : "s"} near you.`
-          : "No mapped places found within 2 km of you. Try searching instead.",
-      );
+      // An empty result has two very different causes, and the user can only
+      // act on one of them.
+      if (response.businesses.length > 0) {
+        setLocationMessage(`Showing ${response.count} place${response.count === 1 ? "" : "s"} near you.`);
+      } else if (response.cacheStatus === "empty") {
+        setLocationMessage(
+          "Compass hasn't mapped your area yet. We're fetching it now — try again in a moment, or search by name.",
+        );
+      } else {
+        setLocationMessage("No mapped places found within 2 km of you. Try searching instead.");
+      }
       window.setTimeout(scrollToResults, 0);
     } catch (error) {
       // Separate a provider outage from a device permission problem: the user
