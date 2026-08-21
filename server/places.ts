@@ -23,7 +23,20 @@ import type { ApiBusiness } from "./db";
  */
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const OVERPASS_URL = process.env.OVERPASS_API_URL ?? "https://overpass-api.de/api/interpreter";
+/**
+ * Overpass mirrors, tried in order.
+ *
+ * The main instance is heavily loaded and periodically refuses traffic from
+ * shared hosting ranges, so relying on one endpoint makes nearby discovery
+ * fail for reasons unrelated to the app. OVERPASS_API_URL, when set, is tried
+ * first.
+ */
+const OVERPASS_URLS = [
+  process.env.OVERPASS_API_URL,
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+].filter((url): url is string => Boolean(url));
 
 /** Nominatim requires a genuine identifying User-Agent; stock ones are refused. */
 const USER_AGENT =
@@ -93,6 +106,12 @@ async function fetchWithTimeout(url: string, init: RequestInit = {}) {
     if ((error as Error)?.name === "AbortError") {
       throw new PlacesProviderError("Place search timed out.");
     }
+    // Log the underlying cause: a DNS/TLS/egress failure on the host looks
+    // identical to a provider outage from the client's side otherwise.
+    const cause = (error as { cause?: unknown })?.cause;
+    process.stderr.write(
+      `compass-api: upstream request to ${url} failed: ${String(error)}${cause ? ` | cause: ${String(cause)}` : ""}\n`,
+    );
     throw new PlacesProviderError("Place search is unavailable.");
   } finally {
     clearTimeout(timer);
@@ -279,20 +298,35 @@ export async function nearbyPlaces(params: {
   const around = `(around:${radius},${params.latitude},${params.longitude})`;
   const query = `[out:json][timeout:15];(nwr${around}${NEARBY_FILTER};nwr${around}${NEARBY_SHOP_FILTER};nwr${around}${NEARBY_TOURISM_FILTER};);out center tags ${limit * 3};`;
 
-  const response = await fetchWithTimeout(OVERPASS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ data: query }).toString(),
-  });
+  // Try each mirror in turn so one refusing traffic does not break the feature.
+  let payload: { elements?: OverpassElement[] } | undefined;
+  let lastError: unknown;
+  for (const endpoint of OVERPASS_URLS) {
+    try {
+      const response = await fetchWithTimeout(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ data: query }).toString(),
+      });
+      if (response.status === 429 || response.status === 504 || response.status >= 500) {
+        lastError = new PlacesProviderError(`Mirror ${endpoint} returned ${response.status}.`);
+        continue;
+      }
+      if (!response.ok) {
+        lastError = new PlacesProviderError(`Nearby discovery failed (${response.status}).`);
+        continue;
+      }
+      payload = (await response.json()) as { elements?: OverpassElement[] };
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
 
-  if (response.status === 429 || response.status === 504) {
+  if (!payload) {
+    process.stderr.write(`compass-api: all Overpass mirrors failed: ${String(lastError)}\n`);
     throw new PlacesProviderError("Nearby discovery is busy right now. Please try again shortly.");
   }
-  if (!response.ok) {
-    throw new PlacesProviderError(`Nearby discovery failed (${response.status}).`);
-  }
-
-  const payload = (await response.json()) as { elements?: OverpassElement[] };
   const origin = { lat: params.latitude, lon: params.longitude };
   const businesses = (payload.elements ?? [])
     .map((element) => elementToBusiness(element, origin))
