@@ -124,6 +124,7 @@ export function validateCredentials(
   email: string,
   password: string,
   minPasswordLength?: number,
+  maxPasswordLength?: number,
 ): AuthErrorResult | undefined {
   if (!email.trim()) return { message: "Enter your email address.", field: "identifier" };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -133,6 +134,12 @@ export function validateCredentials(
   if (minPasswordLength && password.length < minPasswordLength) {
     return {
       message: `Use a password with at least ${minPasswordLength} characters.`,
+      field: "password",
+    };
+  }
+  if (maxPasswordLength && password.length > maxPasswordLength) {
+    return {
+      message: `Use a password of ${maxPasswordLength} characters or fewer.`,
       field: "password",
     };
   }

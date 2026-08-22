@@ -306,6 +306,17 @@ footer { padding: 26px 16px; border-top: 1px solid #e7ebf3; color: #8995ab; back
 .auth-field input:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(83,101,209,.12); background: #fff; }
 .auth-field input:disabled { opacity: .6; }
 .auth-input-error { border-color: #c85a67 !important; }
+
+/* Password field with a show/hide toggle. The input keeps its own border so
+   the control looks identical to the other fields. */
+.password-wrap { position: relative; display: flex; align-items: center; }
+.password-wrap input { width: 100%; min-height: 44px; padding: 0 44px 0 13px; border: 1px solid #dfe4f0; border-radius: 13px; background: #f7f8fc; color: var(--ink); font-size: 14px; transition: border-color .18s, box-shadow .18s; }
+.password-wrap input:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(83,101,209,.12); background: #fff; }
+.password-wrap input:disabled { opacity: .6; }
+.password-wrap-error input { border-color: #c85a67; }
+.password-toggle { position: absolute; right: 6px; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 9px; color: #7d88a4; background: transparent; cursor: pointer; transition: color .18s, background .18s; }
+.password-toggle:hover:not(:disabled) { color: var(--indigo); background: #eef1fd; }
+.password-toggle:disabled { opacity: .5; }
 .auth-hint { margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.4; }
 
 .auth-submit, .otp-submit { min-height: 46px; margin-top: 4px; border: 0; border-radius: 13px; color: #fff; background: var(--indigo); font-size: 13.5px; font-weight: 800; box-shadow: 0 5px 14px rgba(83,101,209,.22); transition: background .2s, transform .15s; }

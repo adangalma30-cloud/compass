@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 
 type PasswordSettings = {
   min_length?: number;
+  max_length?: number;
   require_special_char?: boolean;
   require_numbers?: boolean;
   require_uppercase?: boolean;
@@ -23,12 +24,23 @@ type PasswordSettings = {
 
 export type PasswordPolicy = {
   minLength?: number;
+  maxLength?: number;
   /** Human-readable summary shown as form hint text. */
   hint: string;
 };
 
+/**
+ * Upper bound Compass applies on top of Clerk's own rules.
+ *
+ * Clerk reports max_length 0 (meaning "no limit") on this instance, but the
+ * product requires a bounded password, so the smaller of the two is used.
+ */
+const COMPASS_MAX_PASSWORD_LENGTH = 15;
+
 function describe(settings: PasswordSettings | undefined): PasswordPolicy {
   const minLength = settings?.min_length && settings.min_length > 0 ? settings.min_length : undefined;
+  const providerMax = settings?.max_length && settings.max_length > 0 ? settings.max_length : undefined;
+  const maxLength = Math.min(providerMax ?? COMPASS_MAX_PASSWORD_LENGTH, COMPASS_MAX_PASSWORD_LENGTH);
 
   const extras: string[] = [];
   if (settings?.require_uppercase) extras.push("an uppercase letter");
@@ -36,12 +48,16 @@ function describe(settings: PasswordSettings | undefined): PasswordPolicy {
   if (settings?.require_numbers) extras.push("a number");
   if (settings?.require_special_char) extras.push("a special character");
 
-  if (!minLength && extras.length === 0) return { minLength, hint: "" };
+  // A minimum above the cap is contradictory, so the range collapses to the
+  // value Clerk will actually accept rather than advertising an impossible one.
+  const rangeText = minLength
+    ? minLength >= maxLength
+      ? `At least ${minLength} characters`
+      : `${minLength}–${maxLength} characters`
+    : `Up to ${maxLength} characters`;
 
-  const lengthPart = minLength ? `At least ${minLength} characters` : "Must include";
-  const extrasPart = extras.length ? `${minLength ? ", including " : " "}${extras.join(", ")}` : "";
-
-  return { minLength, hint: `${lengthPart}${extrasPart}.` };
+  const extrasPart = extras.length ? `, including ${extras.join(", ")}` : "";
+  return { minLength, maxLength, hint: `${rangeText}${extrasPart}.` };
 }
 
 /**

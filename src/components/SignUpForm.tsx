@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSignUp } from "@clerk/react/legacy";
 import { Link } from "react-router-dom";
 import VerifyEmail from "./VerifyEmail";
+import PasswordField from "./PasswordField";
 import { friendlyAuthError, validateCredentials, type FieldName } from "../lib/authErrors";
 import { usePasswordPolicy } from "../lib/passwordPolicy";
 
@@ -45,7 +46,12 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
     event.preventDefault();
     if (!isLoaded || submitting) return;
 
-    const invalid = validateCredentials(email, password, passwordPolicy.minLength);
+    const invalid = validateCredentials(
+      email,
+      password,
+      passwordPolicy.minLength,
+      passwordPolicy.maxLength,
+    );
     if (invalid) {
       setError(invalid.message);
       setErrorField(invalid.field);
@@ -150,22 +156,18 @@ export default function SignUpForm({ onComplete, signInPath }: SignUpFormProps) 
           />
         </label>
 
-        <label className="auth-field">
-          <span>Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => {
-              setPassword(event.target.value);
-              setError("");
-            }}
-            autoComplete="new-password"
-            className={errorField === "password" && error ? "auth-input-error" : ""}
-            disabled={submitting}
-            required
-          />
-          {passwordPolicy.hint && <small className="auth-hint">{passwordPolicy.hint}</small>}
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            setError("");
+          }}
+          autoComplete="new-password"
+          invalid={errorField === "password" && Boolean(error)}
+          disabled={submitting}
+          hint={passwordPolicy.hint}
+        />
 
         {error && <p className="form-message error" role="alert">{error}</p>}
 
