@@ -96,6 +96,29 @@ responses for ten minutes, and applies request timeouts. Results carry an
 If your traffic grows beyond light use, point `OVERPASS_API_URL` at a mirror or
 your own Overpass instance.
 
+## Seeding place coverage
+
+Nearby discovery reads from PostgreSQL and only tops up from Overpass when an
+area is uncached or stale. Overpass frequently refuses traffic from shared
+hosting, so areas populate slowly if the deployed API is the only thing asking.
+
+Fill them in ahead of time from your own machine:
+
+```bash
+# Render dashboard -> compass-db -> Connections -> External Database URL
+export DATABASE_URL="postgresql://...external...render.com/compass"
+
+node scripts/seed-areas.mjs --list          # show presets
+node scripts/seed-areas.mjs nairobi         # seed a city
+node scripts/seed-areas.mjs nairobi mombasa # several at once
+node scripts/seed-areas.mjs --lat -1.2864 --lon 36.8172 --radius 2500
+```
+
+Use the **External** database URL: the internal one is only reachable from
+inside Render. Re-running is safe, since rows are upserted and coverage is
+refreshed in place. Seeding Nairobi takes about a minute and adds roughly 2,300
+places.
+
 ## Free tier caveat
 
 Render's free instances sleep after roughly 15 minutes idle, so the first

@@ -124,6 +124,7 @@ secrets. Without them the APK still builds, but it cannot sign in.
 | `npm run build` | Typecheck and build the web assets. |
 | `npm run verify` | Lint, build, and typecheck the server. |
 | `npm run android:debug` | Preflight, sync, and assemble a debug APK. |
+| `node scripts/seed-areas.mjs --list` | Pre-populate the place cache for a city. See DEPLOYMENT.md. |
 
 ---
 
